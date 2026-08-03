@@ -32,6 +32,7 @@ module.exports.policies = {
   'users/index': 'is-authenticated',
   'users/create': ['is-authenticated', 'is-admin'],
   'users/show': 'is-authenticated',
+  'users/show-stats': 'is-authenticated',
   'users/update': 'is-authenticated',
   'users/update-email': 'is-authenticated',
   'users/update-password': 'is-authenticated',

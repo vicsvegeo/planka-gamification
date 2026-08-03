@@ -293,6 +293,10 @@ const createSocketEventsChannel = () =>
       emit(entryActions.handleNotificationServiceDelete(item));
     };
 
+    const handleGamificationEvent = ({ item }) => {
+      emit(entryActions.handleGamificationEvent(item));
+    };
+
     socket.on('disconnect', handleDisconnect);
     socket.on('reconnect', handleReconnect);
 
@@ -388,6 +392,8 @@ const createSocketEventsChannel = () =>
     socket.on('notificationServiceCreate', handleNotificationServiceCreate);
     socket.on('notificationServiceUpdate', handleNotificationServiceUpdate);
     socket.on('notificationServiceDelete', handleNotificationServiceDelete);
+
+    socket.on('gamificationEvent', handleGamificationEvent);
 
     return () => {
       socket.off('disconnect', handleDisconnect);
@@ -485,6 +491,8 @@ const createSocketEventsChannel = () =>
       socket.off('notificationServiceCreate', handleNotificationServiceCreate);
       socket.off('notificationServiceUpdate', handleNotificationServiceUpdate);
       socket.off('notificationServiceDelete', handleNotificationServiceDelete);
+
+      socket.off('gamificationEvent', handleGamificationEvent);
     };
   });
 

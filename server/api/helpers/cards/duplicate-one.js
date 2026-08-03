@@ -186,6 +186,20 @@ module.exports = {
       listChangedAt: new Date().toISOString(),
     });
 
+    // NEW — gamification: duplicate the source card's XP value / soft due date, but as
+    // a fresh, unstarted card (no XP or bonus carried over from the original).
+    const sourceCardGamification = await CardGamification.qm.getOneByCardId(inputs.record.id);
+
+    const cardGamification = await CardGamification.qm.createOne({
+      cardId: card.id,
+      baseXp: sourceCardGamification ? sourceCardGamification.baseXp : 10,
+      softDueDate: sourceCardGamification ? sourceCardGamification.softDueDate : null,
+    });
+
+    card.baseXp = cardGamification.baseXp;
+    card.softDueDate = cardGamification.softDueDate;
+    card.bonusAwarded = cardGamification.bonusAwarded;
+
     const boardMemberUserIds = await sails.helpers.boards.getMemberUserIds(card.boardId);
     const boardMemberUserIdsSet = new Set(boardMemberUserIds);
 

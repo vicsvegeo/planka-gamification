@@ -35,6 +35,8 @@ import ListsStep from '../../lists/ListsStep';
 import Attachments from '../../attachments/Attachments';
 import AddAttachmentStep from '../../attachments/AddAttachmentStep';
 import AddCustomFieldGroupStep from '../../custom-field-groups/AddCustomFieldGroupStep';
+import XpChip from '../XpChip';
+import EditXpStep from '../EditXpStep';
 
 import styles from './StoryContent.module.scss';
 
@@ -73,6 +75,7 @@ const StoryContent = React.memo(() => {
     canEditType,
     canEditName,
     canEditDescription,
+    canEditXp,
     canSubscribe,
     canJoin,
     canDuplicate,
@@ -101,6 +104,7 @@ const StoryContent = React.memo(() => {
         canEditType: false,
         canEditName: false,
         canEditDescription: false,
+        canEditXp: false,
         canSubscribe: isMember,
         canJoin: false,
         canDuplicate: false,
@@ -120,6 +124,7 @@ const StoryContent = React.memo(() => {
       canEditType: isEditor,
       canEditName: isEditor,
       canEditDescription: isEditor,
+      canEditXp: isEditor,
       canSubscribe: isMember,
       canJoin: isEditor,
       canDuplicate: isEditor,
@@ -279,6 +284,7 @@ const StoryContent = React.memo(() => {
   const AddCustomFieldGroupPopup = usePopupInClosableContext(AddCustomFieldGroupStep);
   const MoreActionsPopup = usePopupInClosableContext(MoreActionsStep);
   const ConfirmationPopup = usePopupInClosableContext(ConfirmationStep);
+  const EditXpPopup = usePopupInClosableContext(EditXpStep);
 
   return (
     <Grid className={styles.wrapper}>
@@ -395,6 +401,19 @@ const StoryContent = React.memo(() => {
                 )}
               </div>
             )}
+            <div className={classNames(styles.moduleWrapper, styles.moduleWrapperAttachments)}>
+              <div className={styles.attachments}>
+                <span className={styles.attachment}>
+                  {canEditXp ? (
+                    <EditXpPopup cardId={card.id}>
+                      <XpChip value={card.baseXp} />
+                    </EditXpPopup>
+                  ) : (
+                    <XpChip value={card.baseXp} />
+                  )}
+                </span>
+              </div>
+            </div>
             {(card.description || canEditDescription) && (
               <div className={classNames(styles.contentModule, styles.contentModuleDescription)}>
                 <div className={styles.moduleWrapper}>

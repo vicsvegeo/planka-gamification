@@ -9,20 +9,32 @@
  * https://sailsjs.com/config/bootstrap
  */
 
+const { BADGES } = require('../utils/badges');
+
 module.exports.bootstrap = async () => {
-  // By convention, this is a good place to set up fake data during development.
-  //
-  // For example:
-  // ```
-  // // Set up fake development data (or if we already have some, avast)
-  // if (await User.count() > 0) {
-  //   return;
-  // }
-  //
-  // await User.createEach([
-  //   { emailAddress: 'ry@example.com', fullName: 'Ryan Dahl', },
-  //   { emailAddress: 'rachael@example.com', fullName: 'Rachael Shaw', },
-  //   // etc.
-  // ]);
-  // ```
+  // Gamification: keep the badge catalog in sync with the in-code registry on every
+  // boot. Upsert by slug so re-running this never duplicates rows or clobbers unlocks.
+  await Promise.all(
+    BADGES.map(async (definition) => {
+      const existingBadge = await Badge.qm.getOneBySlug(definition.slug);
+
+      const values = {
+        name: definition.name,
+        description: definition.description,
+        icon: definition.icon,
+      };
+
+      if (existingBadge) {
+        await Badge.qm.updateOne({ id: existingBadge.id }, values);
+      } else {
+        try {
+          await Badge.qm.createOne({ ...values, slug: definition.slug });
+        } catch (error) {
+          if (error.code !== 'E_UNIQUE') {
+            throw error;
+          }
+        }
+      }
+    }),
+  );
 };

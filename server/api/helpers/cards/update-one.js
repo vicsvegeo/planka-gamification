@@ -240,6 +240,19 @@ module.exports = {
         return card;
       }
 
+      // NEW — gamification: fires exactly once, on the false -> true isClosed transition.
+      if (values.isClosed) {
+        sails.helpers.gamification.awardForCardCompletion
+          .with({
+            card,
+            previousList: inputs.list,
+            actorUser: inputs.actorUser,
+          })
+          .catch((error) => {
+            sails.log.error('Failed to award gamification for card completion:', error);
+          });
+      }
+
       if (values.board) {
         const labels = await Label.qm.getByBoardId(card.boardId);
         const labelByName = _.keyBy(labels, 'name');

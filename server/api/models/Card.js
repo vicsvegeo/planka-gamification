@@ -120,6 +120,22 @@
  *           default: false
  *           description: Whether the card is closed
  *           example: false
+ *         baseXp:
+ *           type: integer
+ *           nullable: true
+ *           description: XP value awarded on completing this card (gamification)
+ *           example: 10
+ *         softDueDate:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *           description: Loose due date; completing on or before it grants bonus XP (gamification)
+ *           example: 2024-01-01T00:00:00.000Z
+ *         bonusAwarded:
+ *           type: boolean
+ *           nullable: true
+ *           description: Whether the on-time bonus XP has already been awarded for this card (gamification)
+ *           example: false
  *         listChangedAt:
  *           type: string
  *           format: date-time

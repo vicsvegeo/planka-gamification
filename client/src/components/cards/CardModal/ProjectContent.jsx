@@ -26,8 +26,12 @@ import CreationDetailsStep from './CreationDetailsStep';
 import MoreActionsStep from './MoreActionsStep';
 import DueDateChip from '../DueDateChip';
 import StopwatchChip from '../StopwatchChip';
+import XpChip from '../XpChip';
+import SoftDueDateChip from '../SoftDueDateChip';
 import EditDueDateStep from '../EditDueDateStep';
 import EditStopwatchStep from '../EditStopwatchStep';
+import EditXpStep from '../EditXpStep';
+import EditSoftDueDateStep from '../EditSoftDueDateStep';
 import ExpandableMarkdown from '../../common/ExpandableMarkdown';
 import EditMarkdown from '../../common/EditMarkdown';
 import ConfirmationStep from '../../common/ConfirmationStep';
@@ -70,6 +74,7 @@ const ProjectContent = React.memo(() => {
     canEditName,
     canEditDescription,
     canEditDueDate,
+    canEditXp,
     canEditStopwatch,
     canSubscribe,
     canJoin,
@@ -101,6 +106,7 @@ const ProjectContent = React.memo(() => {
         canEditName: false,
         canEditDescription: false,
         canEditDueDate: false,
+        canEditXp: false,
         canEditStopwatch: false,
         canSubscribe: isMember,
         canJoin: false,
@@ -123,6 +129,7 @@ const ProjectContent = React.memo(() => {
       canEditName: isEditor,
       canEditDescription: isEditor,
       canEditDueDate: isEditor,
+      canEditXp: isEditor,
       canEditStopwatch: isEditor,
       canSubscribe: isMember,
       canJoin: isEditor,
@@ -289,6 +296,8 @@ const ProjectContent = React.memo(() => {
   const ListsPopup = usePopupInClosableContext(ListsStep);
   const EditDueDatePopup = usePopupInClosableContext(EditDueDateStep);
   const EditStopwatchPopup = usePopupInClosableContext(EditStopwatchStep);
+  const EditXpPopup = usePopupInClosableContext(EditXpStep);
+  const EditSoftDueDatePopup = usePopupInClosableContext(EditSoftDueDateStep);
   const AddTaskListPopup = usePopupInClosableContext(AddTaskListStep);
   const AddAttachmentPopup = usePopupInClosableContext(AddAttachmentStep);
   const AddCustomFieldGroupPopup = usePopupInClosableContext(AddCustomFieldGroupStep);
@@ -481,6 +490,38 @@ const ProjectContent = React.memo(() => {
               )}
             </div>
           )}
+          <div className={styles.moduleWrapper}>
+            <div className={styles.attachments}>
+              <div className={styles.text}>{t('common.xpValue', { context: 'title' })}</div>
+              <span className={styles.attachment}>
+                {canEditXp ? (
+                  <EditXpPopup cardId={card.id}>
+                    <XpChip value={card.baseXp} />
+                  </EditXpPopup>
+                ) : (
+                  <XpChip value={card.baseXp} />
+                )}
+              </span>
+            </div>
+            {card.softDueDate && (
+              <div className={styles.attachments}>
+                <div className={styles.text}>
+                  {t('common.softDueDate', {
+                    context: 'title',
+                  })}
+                </div>
+                <span className={styles.attachment}>
+                  {canEditXp ? (
+                    <EditSoftDueDatePopup cardId={card.id}>
+                      <SoftDueDateChip value={card.softDueDate} bonusAwarded={card.bonusAwarded} />
+                    </EditSoftDueDatePopup>
+                  ) : (
+                    <SoftDueDateChip value={card.softDueDate} bonusAwarded={card.bonusAwarded} />
+                  )}
+                </span>
+              </div>
+            )}
+          </div>
           {(card.description || canEditDescription) && (
             <div className={classNames(styles.contentModule, styles.contentModuleDescription)}>
               <div className={styles.moduleWrapper}>
@@ -622,6 +663,16 @@ const ProjectContent = React.memo(() => {
                       {t('common.stopwatch')}
                     </Button>
                   </EditStopwatchPopup>
+                )}
+                {canEditXp && !card.softDueDate && (
+                  <EditSoftDueDatePopup cardId={card.id}>
+                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                      <Icon name="hourglass half" className={styles.actionIcon} />
+                      {t('common.softDueDate', {
+                        context: 'title',
+                      })}
+                    </Button>
+                  </EditSoftDueDatePopup>
                 )}
                 {canAddTaskList && (
                   <AddTaskListPopup>

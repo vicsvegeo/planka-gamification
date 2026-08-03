@@ -288,6 +288,8 @@ module.exports = {
       card.isSubscribed = isSubscribedByCardId[card.id] || false;
     });
 
+    await sails.helpers.cards.attachGamification.with({ cards });
+
     return {
       items: cards,
       included: {

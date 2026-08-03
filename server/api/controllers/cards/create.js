@@ -29,6 +29,7 @@
  *             required:
  *               - type
  *               - name
+ *               - baseXp
  *             properties:
  *               type:
  *                 type: string
@@ -79,6 +80,17 @@
  *                     type: number
  *                     description: Total time in seconds
  *                     example: 3600
+ *               baseXp:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: XP value awarded on completing this card
+ *                 example: 10
+ *               softDueDate:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 description: Loose due date; completing on or before it grants bonus XP (missing it costs nothing)
+ *                 example: 2024-01-01T00:00:00.000Z
  *     responses:
  *       200:
  *         description: Card created successfully
@@ -157,6 +169,17 @@ module.exports = {
       type: 'json',
       custom: isStopwatch,
     },
+    // NEW — gamification: every card must be created with an XP value
+    baseXp: {
+      type: 'number',
+      required: true,
+      custom: (value) => Number.isInteger(value) && value > 0,
+    },
+    softDueDate: {
+      type: 'string',
+      custom: isDueDate,
+      allowNull: true,
+    },
   },
 
   exits: {
@@ -210,6 +233,8 @@ module.exports = {
           list,
           creatorUser: currentUser,
         },
+        baseXp: inputs.baseXp,
+        softDueDate: inputs.softDueDate,
         request: this.req,
       })
       .intercept('positionMustBeInValues', () => Errors.POSITION_MUST_BE_PRESENT);

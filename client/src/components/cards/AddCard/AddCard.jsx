@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import TextareaAutosize from 'react-textarea-autosize';
-import { Button, Form, Icon, TextArea } from 'semantic-ui-react';
+import { Button, Form, Icon, Input, TextArea } from 'semantic-ui-react';
 import { useClickAwayListener, useDidUpdate, usePrevious, useToggle } from '../../../lib/hooks';
 import { usePopup } from '../../../lib/popup';
 
@@ -23,6 +23,7 @@ import styles from './AddCard.module.scss';
 
 const DEFAULT_DATA = {
   name: '',
+  baseXp: 10,
 };
 
 const AddCard = React.memo(({ isOpened, className, onCreate, onClose }) => {
@@ -46,9 +47,12 @@ const AddCard = React.memo(({ isOpened, className, onCreate, onClose }) => {
 
   const submit = useCallback(
     (autoOpen) => {
+      const baseXp = Math.round(Number(data.baseXp));
+
       const cleanData = {
         ...data,
         name: data.name.trim(),
+        baseXp: Number.isInteger(baseXp) && baseXp > 0 ? baseXp : 1,
       };
 
       if (!cleanData.name) {
@@ -170,6 +174,20 @@ const AddCard = React.memo(({ isOpened, className, onCreate, onClose }) => {
           onKeyDown={handleFieldKeyDown}
           onChange={handleFieldChange}
         />
+      </div>
+      <div className={styles.xpFieldWrapper}>
+        <Icon name="star" className={styles.xpFieldIcon} />
+        <Input
+          {...clickAwayProps} // eslint-disable-line react/jsx-props-no-spreading
+          type="number"
+          name="baseXp"
+          value={data.baseXp}
+          min={1}
+          placeholder={t('common.xp')}
+          className={styles.xpField}
+          onChange={handleFieldChange}
+        />
+        <span className={styles.xpFieldLabel}>{t('common.xp')}</span>
       </div>
       <div className={styles.controls}>
         <Button

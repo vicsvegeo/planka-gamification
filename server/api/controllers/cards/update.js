@@ -93,6 +93,17 @@
  *               isSubscribed:
  *                 type: boolean
  *                 description: Whether the current user is subscribed to the card
+ *               baseXp:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: XP value awarded on completing this card
+ *                 example: 10
+ *               softDueDate:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 description: Loose due date; completing on or before it grants bonus XP (missing it costs nothing)
+ *                 example: 2024-01-01T00:00:00.000Z
  *     responses:
  *       200:
  *         description: Card updated successfully
@@ -195,6 +206,15 @@ module.exports = {
     isSubscribed: {
       type: 'boolean',
     },
+    baseXp: {
+      type: 'number',
+      custom: (value) => Number.isInteger(value) && value > 0,
+    },
+    softDueDate: {
+      type: 'string',
+      custom: isDueDate,
+      allowNull: true,
+    },
   },
 
   exits: {
@@ -256,6 +276,8 @@ module.exports = {
         'dueDate',
         'isDueCompleted',
         'stopwatch',
+        'baseXp',
+        'softDueDate',
       );
     }
 
@@ -344,6 +366,36 @@ module.exports = {
 
     if (!card) {
       throw Errors.CARD_NOT_FOUND;
+    }
+
+    // NEW — gamification: allow editing a card's XP value / soft due date after creation.
+    const gamificationValues = _.pick(inputs, ['baseXp', 'softDueDate']);
+
+    let cardGamification;
+    if (!_.isEmpty(gamificationValues)) {
+      cardGamification = await CardGamification.qm.updateOne(
+        { cardId: card.id },
+        gamificationValues,
+      );
+    } else {
+      cardGamification = await CardGamification.qm.getOneByCardId(card.id);
+    }
+
+    if (cardGamification) {
+      card.baseXp = cardGamification.baseXp;
+      card.softDueDate = cardGamification.softDueDate;
+      card.bonusAwarded = cardGamification.bonusAwarded;
+    }
+
+    if (!_.isEmpty(gamificationValues)) {
+      sails.sockets.broadcast(
+        `board:${card.boardId}`,
+        'cardUpdate',
+        {
+          item: _.pick(card, ['id', 'baseXp', 'softDueDate', 'bonusAwarded']),
+        },
+        this.req,
+      );
     }
 
     return {

@@ -254,6 +254,8 @@ module.exports = {
       card.isSubscribed = isSubscribedByCardId[card.id] || false;
     });
 
+    await sails.helpers.cards.attachGamification.with({ cards });
+
     if (inputs.subscribe && this.req.isSocket) {
       sails.sockets.join(this.req, `board:${board.id}`);
     }

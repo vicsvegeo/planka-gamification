@@ -17,6 +17,7 @@ import { BoardMembershipRoles, BoardViews, UserRoles } from '../../../constants/
 import UserAvatar from '../../users/UserAvatar';
 import UserActionsStep from '../../users/UserActionsStep';
 import NotificationsStep from '../../notifications/NotificationsStep';
+import GamificationWidget from '../../gamification/GamificationWidget';
 
 import styles from './Header.module.scss';
 
@@ -144,6 +145,7 @@ const Header = React.memo(() => {
               />
             </Menu.Item>
           )}
+          <GamificationWidget />
           <NotificationsPopup>
             <Menu.Item className={classNames(styles.item, styles.itemHoverable)}>
               <Icon fitted name="bell" />

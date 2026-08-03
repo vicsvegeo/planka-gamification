@@ -17,6 +17,7 @@ import { BoardMembershipRoles, BoardViews } from '../../../constants/Enums';
 import TaskList from './TaskList';
 import DueDateChip from '../DueDateChip';
 import StopwatchChip from '../StopwatchChip';
+import XpChip from '../XpChip';
 import TimeAgo from '../../common/TimeAgo';
 import UserAvatar from '../../users/UserAvatar';
 import LabelChip from '../../labels/LabelChip';
@@ -179,76 +180,77 @@ const ProjectContent = React.memo(({ cardId }) => {
       {taskListIds.map((taskListId) => (
         <TaskList key={taskListId} id={taskListId} />
       ))}
-      {hasInformation && (
-        <span className={styles.attachments}>
-          {notificationsTotal > 0 && (
-            <span
-              className={classNames(styles.attachment, styles.attachmentLeft, styles.notification)}
-            >
-              {notificationsTotal}
-            </span>
-          )}
-          {card.dueDate && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <DueDateChip
-                value={card.dueDate}
-                size="tiny"
-                isCompleted={card.isDueCompleted}
-                withStatus={!card.isClosed}
-              />
-            </span>
-          )}
-          {card.stopwatch && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <StopwatchChip
-                value={card.stopwatch}
-                as="span"
-                size="tiny"
-                onClick={canEditStopwatch ? handleToggleStopwatchClick : undefined}
-              />
-            </span>
-          )}
-          {listName && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <span className={styles.attachmentContent}>
-                <Icon name="columns" />
-                {listName}
-              </span>
-            </span>
-          )}
-          {card.description && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <span className={styles.attachmentContent}>
-                <Icon name="align left" />
-              </span>
-            </span>
-          )}
-          {attachmentsTotal > 0 && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <span className={styles.attachmentContent}>
-                <Icon name="attach" />
-                {attachmentsTotal}
-              </span>
-            </span>
-          )}
-          {card.commentsTotal > 0 && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <span className={styles.attachmentContent}>
-                <Icon name="comment outline" />
-                {card.commentsTotal}
-              </span>
-            </span>
-          )}
-          {withAge && card.createdAt && (
-            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-              <span className={styles.attachmentContent}>
-                <Icon name="history" />
-                <TimeAgo date={card.createdAt} />
-              </span>
-            </span>
-          )}
+      <span className={styles.attachments}>
+        {notificationsTotal > 0 && (
+          <span
+            className={classNames(styles.attachment, styles.attachmentLeft, styles.notification)}
+          >
+            {notificationsTotal}
+          </span>
+        )}
+        <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+          <XpChip value={card.baseXp} />
         </span>
-      )}
+        {card.dueDate && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <DueDateChip
+              value={card.dueDate}
+              size="tiny"
+              isCompleted={card.isDueCompleted}
+              withStatus={!card.isClosed}
+            />
+          </span>
+        )}
+        {card.stopwatch && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <StopwatchChip
+              value={card.stopwatch}
+              as="span"
+              size="tiny"
+              onClick={canEditStopwatch ? handleToggleStopwatchClick : undefined}
+            />
+          </span>
+        )}
+        {listName && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <span className={styles.attachmentContent}>
+              <Icon name="columns" />
+              {listName}
+            </span>
+          </span>
+        )}
+        {card.description && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <span className={styles.attachmentContent}>
+              <Icon name="align left" />
+            </span>
+          </span>
+        )}
+        {attachmentsTotal > 0 && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <span className={styles.attachmentContent}>
+              <Icon name="attach" />
+              {attachmentsTotal}
+            </span>
+          </span>
+        )}
+        {card.commentsTotal > 0 && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <span className={styles.attachmentContent}>
+              <Icon name="comment outline" />
+              {card.commentsTotal}
+            </span>
+          </span>
+        )}
+        {withAge && card.createdAt && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <span className={styles.attachmentContent}>
+              <Icon name="history" />
+              <TimeAgo date={card.createdAt} />
+            </span>
+          </span>
+        )}
+      </span>
       {!isCompact && usersNode}
     </div>
   );

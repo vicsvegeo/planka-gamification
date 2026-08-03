@@ -154,6 +154,7 @@ module.exports = {
     }
 
     card.isSubscribed = await sails.helpers.users.isCardSubscriber(currentUser.id, card.id);
+    await sails.helpers.cards.attachGamification.with({ cards: card });
 
     const users = card.creatorUserId ? await User.qm.getByIds([card.creatorUserId]) : [];
     const cardMemberships = await CardMembership.qm.getByCardId(card.id);

@@ -13,6 +13,7 @@ import selectors from '../../../selectors';
 import markdownToText from '../../../utils/markdown-to-text';
 import { BoardViews } from '../../../constants/Enums';
 import TimeAgo from '../../common/TimeAgo';
+import XpChip from '../XpChip';
 import LabelChip from '../../labels/LabelChip';
 import CustomFieldValueChip from '../../custom-field-values/CustomFieldValueChip';
 
@@ -105,45 +106,42 @@ const StoryContent = React.memo(({ cardId }) => {
           {card.name}
         </div>
         {card.description && <div className={styles.descriptionText}>{descriptionText}</div>}
-        {(withAge || attachmentsTotal > 0 || notificationsTotal > 0 || listName) && (
-          <span className={styles.attachments}>
-            {notificationsTotal > 0 && (
-              <span
-                className={classNames(
-                  styles.attachment,
-                  styles.attachmentLeft,
-                  styles.notification,
-                )}
-              >
-                {notificationsTotal}
-              </span>
-            )}
-            {listName && (
-              <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-                <span className={styles.attachmentContent}>
-                  <Icon name="columns" />
-                  {listName}
-                </span>
-              </span>
-            )}
-            {attachmentsTotal > 0 && (
-              <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-                <span className={styles.attachmentContent}>
-                  <Icon name="attach" />
-                  {attachmentsTotal}
-                </span>
-              </span>
-            )}
-            {withAge && card.createdAt && (
-              <span className={classNames(styles.attachment, styles.attachmentLeft)}>
-                <span className={styles.attachmentContent}>
-                  <Icon name="history" />
-                  <TimeAgo date={card.createdAt} />
-                </span>
-              </span>
-            )}
+        <span className={styles.attachments}>
+          {notificationsTotal > 0 && (
+            <span
+              className={classNames(styles.attachment, styles.attachmentLeft, styles.notification)}
+            >
+              {notificationsTotal}
+            </span>
+          )}
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <XpChip value={card.baseXp} />
           </span>
-        )}
+          {listName && (
+            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+              <span className={styles.attachmentContent}>
+                <Icon name="columns" />
+                {listName}
+              </span>
+            </span>
+          )}
+          {attachmentsTotal > 0 && (
+            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+              <span className={styles.attachmentContent}>
+                <Icon name="attach" />
+                {attachmentsTotal}
+              </span>
+            </span>
+          )}
+          {withAge && card.createdAt && (
+            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+              <span className={styles.attachmentContent}>
+                <Icon name="history" />
+                <TimeAgo date={card.createdAt} />
+              </span>
+            </span>
+          )}
+        </span>
       </div>
     </>
   );

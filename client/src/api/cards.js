@@ -17,6 +17,9 @@ export const transformCard = (card) => ({
   ...(card.dueDate && {
     dueDate: new Date(card.dueDate),
   }),
+  ...(card.softDueDate && {
+    softDueDate: new Date(card.softDueDate),
+  }),
   ...(card.stopwatch && {
     stopwatch: {
       ...card.stopwatch,
@@ -37,6 +40,9 @@ export const transformCardData = (data) => ({
   ...data,
   ...(data.dueDate && {
     dueDate: data.dueDate.toISOString(),
+  }),
+  ...(data.softDueDate && {
+    softDueDate: data.softDueDate.toISOString(),
   }),
   ...(data.stopwatch && {
     stopwatch: {

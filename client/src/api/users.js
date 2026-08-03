@@ -21,6 +21,9 @@ const createUser = (data, headers) => socket.post('/users', data, headers);
 const getCurrentUser = (subscribe, headers) =>
   socket.get(`/users/me${subscribe ? '?subscribe=true' : ''}`, undefined, headers);
 
+const getUserGamificationStats = (id, headers) =>
+  socket.get(`/users/${id}/gamification-stats`, undefined, headers);
+
 const updateUser = (id, data, headers) => socket.patch(`/users/${id}`, data, headers);
 
 const updateUserEmail = (id, data, headers) => socket.patch(`/users/${id}/email`, data, headers);
@@ -43,6 +46,7 @@ export default {
   createUser,
   // getUser,
   getCurrentUser,
+  getUserGamificationStats,
   updateUser,
   updateUserEmail,
   updateUserPassword,

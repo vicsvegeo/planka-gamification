@@ -57,4 +57,28 @@
   .wrapperClosed {
     display: none;
   }
+
+  .xpFieldWrapper {
+    align-items: center;
+    display: flex;
+    margin-bottom: 8px;
+  }
+
+  .xpFieldIcon {
+    color: #d9b51c;
+    margin-right: 4px;
+  }
+
+  .xpField {
+    width: 64px;
+
+    input {
+      padding: 4px 8px !important;
+    }
+  }
+
+  .xpFieldLabel {
+    color: #6b808c;
+    margin-left: 6px;
+  }
 }

@@ -13,6 +13,13 @@ module.exports = {
       type: 'ref',
       required: true,
     },
+    baseXp: {
+      type: 'number',
+      required: true,
+    },
+    softDueDate: {
+      type: 'ref',
+    },
     request: {
       type: 'ref',
     },
@@ -86,6 +93,17 @@ module.exports = {
       creatorUserId: values.creatorUser.id,
       listChangedAt: new Date().toISOString(),
     });
+
+    // NEW — gamification: every card is born with its XP row.
+    const cardGamification = await CardGamification.qm.createOne({
+      cardId: card.id,
+      baseXp: inputs.baseXp,
+      softDueDate: inputs.softDueDate,
+    });
+
+    card.baseXp = cardGamification.baseXp;
+    card.softDueDate = cardGamification.softDueDate;
+    card.bonusAwarded = cardGamification.bonusAwarded;
 
     sails.sockets.broadcast(
       `board:${card.boardId}`,
