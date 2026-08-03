@@ -23,6 +23,18 @@
 - **Seamless Authentication:** Single sign-on with OpenID Connect integration
 - **Multilingual & Easy to Translate:** Full internationalization support for a global audience
 
+## Gamification (this fork)
+
+This fork layers an XP/level/badge system on top of ordinary card completion — no separate "quest" concept, just Planka cards.
+
+- **XP & leveling** — every card carries an XP value (`baseXp`, required, defaults to 10). Completing a card (moving it into a "closed"-type list) awards that XP to whoever completed it and recomputes their level using an `XP needed = 100 * level^1.5` curve, so early levels come fast and later ones slow down. XP is only ever awarded once per card, even if it's reopened and re-closed.
+- **Soft due dates & on-time bonus** — cards can optionally carry a loose `softDueDate`, separate from Planka's normal due date. Completing on or before it grants a one-time 40% XP bonus; missing it costs nothing.
+- **Badges** — a small rule-based badge engine checks every completion against a registry of badge definitions and unlocks any newly-earned ones. Starter set: First Blood, Getting Started, On a Roll, Punctual, Level 5, Level 10, and Clean Sweep (clearing out an entire list in one go).
+- **Per-user stats** — everything is scoped by user from day one (`GET /api/users/:id/gamification-stats` returns XP, level, progress to next level, completion/on-time counts, and the full badge catalog with unlock status), so it already works for multiple board members, not just a single-player setup.
+- **UI** — a level/XP/badge-count widget lives in the header, with level-up and badge-unlocked toasts, and a badge profile popup showing earned + locked achievements with descriptions. The XP value is viewable/editable in both the compact card tile and the expanded card view; soft due date is editable there too.
+
+New database tables: `user_stats`, `card_gamification`, `badge`, `badge_unlock`. Existing cards from before this feature shipped are backfilled with a default 10 XP by migration, so nothing breaks on an upgrade.
+
 ## How to Deploy
 
 PLANKA is easy to install using multiple methods - learn more in the [installation guide](https://docs.planka.cloud/docs/welcome/).
