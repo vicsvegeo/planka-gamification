@@ -3,10 +3,11 @@ name: Build and Push Docker Image
 on:
   release:
     types: [created]
+  workflow_dispatch: {}
 
 jobs:
   build-and-push-docker-image:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -15,8 +16,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Install client dependencies
         run: npm install --omit=dev
@@ -50,6 +51,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set version from release tag
+        if: github.event_name == 'release'
         uses: actions/github-script@v6
         id: set-version
         with:
@@ -63,7 +65,7 @@ jobs:
           images: |
             name=ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=${{ steps.set-version.outputs.result }}
+            type=raw,value=${{ steps.set-version.outputs.result }},enable=${{ github.event_name == 'release' }}
             type=raw,value=latest
           labels: |
             org.opencontainers.image.licenses=Fair Use License
@@ -73,7 +75,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
