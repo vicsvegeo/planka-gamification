@@ -22,6 +22,8 @@
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
 
+const { buildDueDateReminderMessage } = require('../../../utils/due-date-reminder-templates');
+
 const WAKING_HOURS_START = 9;
 const WAKING_HOURS_END = 21;
 const WAKING_HOURS_SPAN = WAKING_HOURS_END - WAKING_HOURS_START;
@@ -161,14 +163,34 @@ module.exports = {
         continue;
       }
 
-      dueRecipients.forEach(({ recipient, timeZone, currentHour, slotIndex }) => {
-        sails.log.info(
-          `[card-reminders] DUE — card=${card.id} ("${card.name}") ` +
-            `recipient=${recipient.id} (${recipient.email}) tz=${timeZone} ` +
-            `daysUntilDue=${daysUntilDue} overdue=${isOverdue} ` +
-            `slot=${slotIndex + 1}/${slotHours.length} (local hour ${currentHour}:00)`,
-        );
+      // Message content only depends on the card (tier is driven by
+      // daysUntilDue, which is card-level), so it's built once and reused
+      // for every due recipient of this card.
+      const message = buildDueDateReminderMessage({
+        card,
+        dueDate: new Date(card.dueDate),
+        daysUntilDue,
+        now,
       });
+
+      await Promise.all(
+        dueRecipients.map(({ recipient, timeZone, currentHour, slotIndex }) => {
+          sails.log.info(
+            `[card-reminders] DUE — card=${card.id} ("${card.name}") ` +
+              `recipient=${recipient.id} (${recipient.email}) tz=${timeZone} ` +
+              `daysUntilDue=${daysUntilDue} overdue=${isOverdue} ` +
+              `slot=${slotIndex + 1}/${slotHours.length} (local hour ${currentHour}:00)`,
+          );
+
+          return sails.helpers.cardReminders.sendDueDateReminder(recipient, message, {
+            cardId: card.id,
+            cardName: card.name,
+            daysUntilDue,
+            overdue: isOverdue,
+            slot: `${slotIndex + 1}/${slotHours.length}`,
+          });
+        }),
+      );
 
       // One card_reminders row per card per send event, regardless of how
       // many of its recipients had a slot due this run (see file header).
