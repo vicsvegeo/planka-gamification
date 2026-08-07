@@ -24,6 +24,15 @@ const getByBoardId = (boardId) =>
     boardId,
   });
 
+// Not closed, has a due date — the candidate set for the due-date reminder scanner.
+const getIncompleteWithDueDate = () =>
+  defaultFind({
+    isClosed: false,
+    dueDate: {
+      '!=': null,
+    },
+  });
+
 const getByListId = async (listId, { exceptIdOrIds, sort = ['position', 'id'] } = {}) => {
   const criteria = {
     listId,
@@ -236,6 +245,7 @@ module.exports = {
   createOne,
   getByIds,
   getByBoardId,
+  getIncompleteWithDueDate,
   getByListId,
   getByEndlessListId,
   getByListIds,

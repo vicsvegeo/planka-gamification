@@ -66,6 +66,14 @@ const getAll = ({ roleOrRoles, isDeactivated } = {}) =>
     role: roleOrRoles,
   });
 
+// The earliest-created, still-active admin — this is a single-owner fork, so
+// there's no dedicated "owner" flag; the founding admin stands in for one.
+const getOneOwner = () =>
+  defaultFind({
+    role: User.Roles.ADMIN,
+    isDeactivated: false,
+  }).then((users) => users[0]);
+
 const getOneById = (id, { withDeactivated = true } = {}) => {
   const criteria = {
     id,
@@ -196,6 +204,7 @@ module.exports = {
   createOne,
   getByIds,
   getAll,
+  getOneOwner,
   getOneById,
   getOneByEmail,
   getOneActiveByEmailOrUsername,
