@@ -74,6 +74,8 @@ export default class extends BaseModel {
     organization: attr(),
     language: attr(),
     apiKeyPrefix: attr(),
+    lastTimezone: attr(),
+    discordUserId: attr(),
     subscribeToOwnCards: attr(),
     subscribeToCardWhenCommenting: attr(),
     turnOffRecentCardHighlighting: attr(),

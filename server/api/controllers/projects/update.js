@@ -68,6 +68,12 @@
  *                 type: boolean
  *                 description: Whether the project is marked as favorite by the current user
  *                 example: true
+ *               snoozedUntil:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 description: Silences due-date/inactivity nudges for this project until this time, for the current user only (null to un-snooze)
+ *                 example: 2024-01-08T00:00:00.000Z
  *     responses:
  *       200:
  *         description: Project updated successfully
@@ -95,6 +101,7 @@
  */
 
 const { idInput } = require('../../../utils/inputs');
+const { isDueDate } = require('../../../utils/validators');
 
 const Errors = {
   NOT_ENOUGH_RIGHTS: {
@@ -164,6 +171,11 @@ module.exports = {
     isFavorite: {
       type: 'boolean',
     },
+    snoozedUntil: {
+      type: 'string',
+      custom: isDueDate,
+      allowNull: true,
+    },
   },
 
   exits: {
@@ -207,7 +219,7 @@ module.exports = {
       currentUser.id,
     );
 
-    const availableInputKeys = ['id', 'isFavorite'];
+    const availableInputKeys = ['id', 'isFavorite', 'snoozedUntil'];
     if (project.ownerProjectManagerId) {
       if (projectManager) {
         if (!_.isNil(inputs.ownerProjectManagerId)) {
@@ -262,7 +274,7 @@ module.exports = {
       delete inputs.backgroundImageId; // eslint-disable-line no-param-reassign
     }
 
-    if (!_.isUndefined(inputs.isFavorite)) {
+    if (!_.isUndefined(inputs.isFavorite) || !_.isUndefined(inputs.snoozedUntil)) {
       if (currentUser.role !== User.Roles.ADMIN || project.ownerProjectManagerId) {
         if (!projectManager) {
           const boardMembershipsTotal =
@@ -287,6 +299,7 @@ module.exports = {
       'backgroundGradient',
       'isHidden',
       'isFavorite',
+      'snoozedUntil',
     ]);
 
     project = await sails.helpers.projects.updateOne

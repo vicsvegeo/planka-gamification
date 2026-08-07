@@ -18,6 +18,7 @@ import UserAvatar from '../../users/UserAvatar';
 import UserActionsStep from '../../users/UserActionsStep';
 import NotificationsStep from '../../notifications/NotificationsStep';
 import GamificationWidget from '../../gamification/GamificationWidget';
+import SnoozeProjectStep from '../../projects/SnoozeProjectStep';
 
 import styles from './Header.module.scss';
 
@@ -92,6 +93,7 @@ const Header = React.memo(() => {
 
   const NotificationsPopup = usePopup(NotificationsStep, POPUP_PROPS);
   const UserActionsPopup = usePopup(UserActionsStep, POPUP_PROPS);
+  const SnoozeProjectPopup = usePopup(SnoozeProjectStep, POPUP_PROPS);
 
   return (
     <div className={styles.wrapper}>
@@ -144,6 +146,17 @@ const Header = React.memo(() => {
                 className={classNames(isEditModeEnabled && styles.itemIconEnabled)}
               />
             </Menu.Item>
+          )}
+          {project && (
+            <SnoozeProjectPopup>
+              <Menu.Item className={classNames(styles.item, styles.itemHoverable)}>
+                <Icon
+                  fitted
+                  name={project.snoozedUntil ? 'moon' : 'moon outline'}
+                  className={classNames(project.snoozedUntil && styles.itemIconEnabled)}
+                />
+              </Menu.Item>
+            </SnoozeProjectPopup>
           )}
           <GamificationWidget />
           <NotificationsPopup>

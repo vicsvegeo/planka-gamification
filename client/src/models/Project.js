@@ -22,6 +22,10 @@ export default class extends BaseModel {
     isFavorite: attr({
       getDefault: () => false,
     }),
+    snoozedUntil: attr({
+      getDefault: () => null,
+    }),
+    lastActivityAt: attr(),
     ownerProjectManagerId: oneToOne({
       to: 'ProjectManager',
       as: 'ownerProjectManager',

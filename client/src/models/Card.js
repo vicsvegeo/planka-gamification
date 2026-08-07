@@ -53,6 +53,15 @@ export default class extends BaseModel {
     isAllActivitiesFetched: attr({
       getDefault: () => null,
     }),
+    baseXp: attr({
+      getDefault: () => null,
+    }),
+    softDueDate: attr({
+      getDefault: () => null,
+    }),
+    bonusAwarded: attr({
+      getDefault: () => false,
+    }),
     boardId: fk({
       to: 'Board',
       as: 'board',

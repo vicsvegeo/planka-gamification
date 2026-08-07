@@ -40,6 +40,12 @@
  *                           type: boolean
  *                           description: Whether the project is marked as favorite by the current user
  *                           example: true
+ *                         snoozedUntil:
+ *                           type: string
+ *                           format: date-time
+ *                           nullable: true
+ *                           description: When nudges for this project stop being silenced for the current user (null if not currently snoozed)
+ *                           example: 2024-01-08T00:00:00.000Z
  *                 included:
  *                   type: object
  *                   required:
@@ -155,6 +161,15 @@ module.exports = {
     }
 
     project.isFavorite = await sails.helpers.users.isProjectFavorite(currentUser.id, project.id);
+
+    const projectSnooze = await ProjectSnooze.qm.getOneByProjectIdAndUserId(
+      project.id,
+      currentUser.id,
+    );
+    project.snoozedUntil =
+      projectSnooze && new Date(projectSnooze.snoozedUntil) > new Date()
+        ? projectSnooze.snoozedUntil
+        : null;
 
     const projectManagers = await ProjectManager.qm.getByProjectId(project.id);
 

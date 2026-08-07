@@ -37,7 +37,7 @@ module.exports = {
 
   // TODO: use normalizeValues
   async fn(inputs) {
-    const { isFavorite, ...values } = inputs.values;
+    const { isFavorite, snoozedUntil, ...values } = inputs.values;
 
     if (values.backgroundImage) {
       values.backgroundImageId = values.backgroundImage.id;
@@ -229,6 +229,35 @@ module.exports = {
 
         // TODO: send webhooks
       }
+    }
+
+    if (!_.isUndefined(snoozedUntil)) {
+      if (snoozedUntil) {
+        await ProjectSnooze.qm.upsertOneByProjectIdAndUserId(
+          project.id,
+          inputs.actorUser.id,
+          snoozedUntil,
+        );
+      } else {
+        await ProjectSnooze.qm.deleteOne({
+          projectId: project.id,
+          userId: inputs.actorUser.id,
+        });
+      }
+
+      sails.sockets.broadcast(
+        `user:${inputs.actorUser.id}`,
+        'projectUpdate',
+        {
+          item: {
+            snoozedUntil,
+            id: project.id,
+          },
+        },
+        inputs.request,
+      );
+
+      // TODO: send webhooks
     }
 
     return project;
