@@ -160,10 +160,6 @@ module.exports = {
       type: 'ref',
       columnName: 'last_activity_at',
     },
-    snoozedUntil: {
-      type: 'ref',
-      columnName: 'snoozed_until',
-    },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
     //  ║╣ ║║║╠╩╗║╣  ║║╚═╗
