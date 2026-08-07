@@ -21,6 +21,22 @@ const Tiers = {
 
 const pluralize = (count, singular) => `${count} ${singular}${count === 1 ? '' : 's'}`;
 
+// Emoji blocks rather than box-drawing characters (▓░ etc.): guaranteed to
+// render identically across every Discord client (mobile/desktop/web),
+// where box-drawing glyphs depend on font support and often look inconsistent.
+const PROGRESS_BAR_LENGTH = 10;
+const PROGRESS_BAR_FILLED = '🟩';
+const PROGRESS_BAR_EMPTY = '⬜';
+
+const buildProgressBar = (completed, total) => {
+  const filledCount = Math.round((completed / total) * PROGRESS_BAR_LENGTH);
+
+  return (
+    PROGRESS_BAR_FILLED.repeat(filledCount) +
+    PROGRESS_BAR_EMPTY.repeat(PROGRESS_BAR_LENGTH - filledCount)
+  );
+};
+
 // Coarse duration for the far-out tiers — reuses scan.js's own daysUntilDue,
 // no separate day-level math.
 const formatDaysLeft = (daysUntilDue) => pluralize(Math.abs(daysUntilDue), 'day');
@@ -107,6 +123,7 @@ const buildDueDateReminderMessage = ({
   list,
   board,
   project,
+  taskProgress,
   dueDate,
   daysUntilDue,
   now,
@@ -129,6 +146,15 @@ const buildDueDateReminderMessage = ({
     ...(project ? [{ name: 'Project', value: project.name, inline: true }] : []),
     ...(board ? [{ name: 'Board', value: board.name, inline: true }] : []),
     ...(list ? [{ name: 'List', value: list.name, inline: true }] : []),
+    ...(taskProgress
+      ? [
+          {
+            name: 'Tasks',
+            value: `${buildProgressBar(taskProgress.completed, taskProgress.total)} ${taskProgress.completed}/${taskProgress.total}`,
+            inline: true,
+          },
+        ]
+      : []),
   ];
 
   return {
