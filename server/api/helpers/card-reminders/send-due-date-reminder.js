@@ -44,8 +44,15 @@ const dispatchViaApprise = async (recipient, message, meta) => {
   return { dispatched: true, method: 'apprise' };
 };
 
-// Discord renders basic markdown in DMs, so the markdown-formatted body
-// (already built alongside text/html in templates.js) is the right fit here.
+// Sends title/body/url/color/fields as separate values rather than a
+// pre-formatted markdown string: the bot builds a native Discord embed
+// (card name as the linked title, tier message as the description, due
+// date/list/board as fields) instead of relying on Discord auto-embedding a
+// link pasted into plain message content, which it doesn't do for
+// markdown-style links and wouldn't produce anything useful here anyway
+// (Planka's card pages have no Open Graph tags and require auth, so an
+// unauthenticated URL-scrape wouldn't show real card info even if Discord
+// attempted one).
 const dispatchViaDiscordBot = async (recipient, message) => {
   const response = await fetch(`${sails.config.custom.botServiceUrl}/dm`, {
     method: 'POST',
@@ -55,8 +62,11 @@ const dispatchViaDiscordBot = async (recipient, message) => {
     },
     body: JSON.stringify({
       discordUserId: recipient.discordUserId,
-      title: message.title,
-      body: message.bodyByFormat.markdown,
+      title: message.cardName,
+      body: message.body,
+      url: message.cardUrl,
+      color: message.color,
+      fields: message.discordFields,
     }),
     signal: AbortSignal.timeout(BOT_REQUEST_TIMEOUT),
   });
@@ -75,7 +85,7 @@ module.exports = {
     },
     message: {
       type: 'ref',
-      required: true, // { title, bodyByFormat: { text, markdown, html } }
+      required: true, // { title, cardName, cardUrl, body, color, discordFields, bodyByFormat }
     },
     meta: {
       type: 'ref',

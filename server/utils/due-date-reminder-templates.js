@@ -38,6 +38,15 @@ const formatHoursOrMinutes = (ms) => {
   return pluralize(Math.max(1, Math.round(absMs / MS_PER_MINUTE)), 'minute');
 };
 
+// Discord embed sidebar color per tier — matches the emoji already in body().
+const COLOR_BY_TIER = {
+  [Tiers.FAR_OUT]: 0x2ecc71,
+  [Tiers.TWO_DAYS]: 0xf1c40f,
+  [Tiers.ONE_DAY]: 0xe67e22,
+  [Tiers.DUE_TODAY]: 0xe74c3c,
+  [Tiers.OVERDUE]: 0x992d22,
+};
+
 const selectTier = (daysUntilDue) => {
   if (daysUntilDue < 0) {
     return Tiers.OVERDUE;
@@ -79,9 +88,29 @@ const TEMPLATES_BY_TIER = {
   },
 };
 
-// { title, bodyByFormat: { text, markdown, html } } — matches the shape
-// sails.helpers.utils.sendNotifications already expects.
-const buildDueDateReminderMessage = ({ card, dueDate, daysUntilDue, now }) => {
+// Same pattern as the card links already built for other notifications (see
+// notifications/create-many.js): {BASE_URL}/cards/:id, per client/src/constants/Paths.js.
+const buildCardUrl = (card) => `${sails.config.custom.baseUrl}/cards/${card.id}`;
+
+// { title, cardName, cardUrl, body, color, discordFields, bodyByFormat }.
+// `bodyByFormat` (text/markdown/html) matches the shape
+// sails.helpers.utils.sendNotifications already expects (Apprise) — each
+// includes a trailing link, since Apprise targets render as plain messages
+// with no separate "link" concept.
+// `cardName` + `cardUrl` + `body` + `color` + `discordFields` are for the
+// Discord bot's native embed: card name as the (linked) title, the tier
+// message as the description, and card metadata as fields — Discord-only
+// because discordFields uses Discord's own <t:unix:F> timestamp markup
+// (auto-localizes per viewer), which would show as literal text anywhere else.
+const buildDueDateReminderMessage = ({
+  card,
+  list,
+  board,
+  project,
+  dueDate,
+  daysUntilDue,
+  now,
+}) => {
   const tier = selectTier(daysUntilDue);
   const template = TEMPLATES_BY_TIER[tier];
 
@@ -90,12 +119,35 @@ const buildDueDateReminderMessage = ({ card, dueDate, daysUntilDue, now }) => {
       ? formatHoursOrMinutes(dueDate.getTime() - now.getTime())
       : formatDaysLeft(daysUntilDue);
 
+  const cardUrl = buildCardUrl(card);
+  const body = template.body(card.name, time);
+
+  const dueUnixSeconds = Math.floor(dueDate.getTime() / 1000);
+
+  const discordFields = [
+    { name: 'Due', value: `<t:${dueUnixSeconds}:F> (<t:${dueUnixSeconds}:R>)` },
+    ...(project ? [{ name: 'Project', value: project.name, inline: true }] : []),
+    ...(board ? [{ name: 'Board', value: board.name, inline: true }] : []),
+    ...(list ? [{ name: 'List', value: list.name, inline: true }] : []),
+  ];
+
   return {
     title: template.title,
+    cardName: card.name,
+    cardUrl,
+    body,
+    color: COLOR_BY_TIER[tier],
+    discordFields,
     bodyByFormat: {
-      text: template.body(card.name, time),
-      markdown: template.body(escapeMarkdown(card.name), time),
-      html: template.body(escapeHtml(card.name), time),
+      text: `${body}\n\nView card: ${cardUrl}`,
+      markdown: `${template.body(escapeMarkdown(card.name), time)}\n\n[View card](${cardUrl})`,
+      // Link text is the URL itself, not a label like "View card": Apprise
+      // downgrades html -> text for any target that doesn't declare HTML
+      // support (common — e.g. most push-style services), and its converter
+      // drops the <a> tag's href entirely, keeping only the visible text. A
+      // label would vanish the link outright; the URL as link text survives
+      // as plain, still-usable text either way.
+      html: `${template.body(escapeHtml(card.name), time)}<br /><br /><a href="${cardUrl}">${cardUrl}</a>`,
     },
   };
 };

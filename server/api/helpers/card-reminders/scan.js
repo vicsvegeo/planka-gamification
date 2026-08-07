@@ -90,15 +90,24 @@ module.exports = {
     }
 
     const cardIds = sails.helpers.utils.mapRecords(cards);
+    const listIds = sails.helpers.utils.mapRecords(cards, 'listId', true);
+    const boardIds = sails.helpers.utils.mapRecords(cards, 'boardId', true);
 
-    const [cardMemberships, existingReminders, ownerUser] = await Promise.all([
+    const [cardMemberships, existingReminders, ownerUser, lists, boards] = await Promise.all([
       CardMembership.qm.getByCardIds(cardIds),
       CardReminder.qm.getByCardIds(cardIds),
       User.qm.getOneOwner(),
+      List.qm.getByIds(listIds),
+      Board.qm.getByIds(boardIds),
     ]);
 
     const memberUserIdsByCardId = _.groupBy(cardMemberships, 'cardId');
     const remindersByCardId = _.groupBy(existingReminders, 'cardId');
+    const listById = _.keyBy(lists, 'id');
+    const boardById = _.keyBy(boards, 'id');
+
+    const projectIds = sails.helpers.utils.mapRecords(boards, 'projectId', true);
+    const projectById = _.keyBy(await Project.qm.getByIds(projectIds), 'id');
 
     const relevantUserIds = _.uniq([
       ...sails.helpers.utils.mapRecords(cardMemberships, 'userId'),
@@ -166,8 +175,13 @@ module.exports = {
       // Message content only depends on the card (tier is driven by
       // daysUntilDue, which is card-level), so it's built once and reused
       // for every due recipient of this card.
+      const board = boardById[card.boardId];
+
       const message = buildDueDateReminderMessage({
         card,
+        list: listById[card.listId],
+        board,
+        project: board && projectById[board.projectId],
         dueDate: new Date(card.dueDate),
         daysUntilDue,
         now,
