@@ -35,6 +35,17 @@ This fork layers an XP/level/badge system on top of ordinary card completion —
 
 New database tables: `user_stats`, `card_gamification`, `badge`, `badge_unlock`. Existing cards from before this feature shipped are backfilled with a default 10 XP by migration, so nothing breaks on an upgrade.
 
+## Discord Notifications (this fork)
+
+This fork adds two proactive reminder sources, delivered as Discord DMs via a companion bot service, [planka-notifications-bot](https://github.com/vicsvegeo/planka-notifications-bot):
+
+- **Due-date reminders** — an hourly scanner (`server/api/helpers/card-reminders/scan.js`) evaluates every incomplete card with a due date and DMs assignees (or the owner, if unassigned) with a frequency that ramps up as the deadline approaches: 1/day when far out, 2/day at 2 days out, 3/day at 1 day out, hourly on the due date itself, and 1/day indefinitely once overdue. Timing (both the day-count tier and which hour counts as a "slot") is computed against each recipient's own local timezone, not server/UTC time.
+- **Project nudges** — reminders for projects with stale activity, DMed to members with snooze buttons (3 days / 1 week / 2 weeks / 1 month) baked into the Discord message so a nudge can be silenced per-project without leaving Discord.
+
+The Planka backend only decides *when* to notify; actual Discord delivery and snooze-button handling live in the separate `planka-notifications-bot` service, which needs to be deployed alongside Planka and pointed at the same database. See that repo's README for setup. Each user links their Discord account by setting `discordUserId` on their Planka user record; DMs go out to that ID.
+
+New database tables: `card_reminders`, `project_snooze`. New column: `user.discordUserId`.
+
 ## How to Deploy
 
 PLANKA is easy to install using multiple methods - learn more in the [installation guide](https://docs.planka.cloud/docs/welcome/).
