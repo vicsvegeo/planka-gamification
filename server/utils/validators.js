@@ -41,7 +41,21 @@ const isEmailOrUsername = (value) =>
 
 const isDueDate = (value) => moment(value, moment.ISO_8601, true).isValid();
 
-const isTimezone = (value) => Intl.supportedValuesOf('timeZone').includes(value);
+// Intl.supportedValuesOf('timeZone') only lists canonical IANA zone names, so
+// it rejects valid aliases like 'UTC' (as opposed to 'Etc/UTC') — and 'UTC'
+// is exactly what Intl.DateTimeFormat().resolvedOptions().timeZone resolves
+// to in plenty of real environments (CI runners, many Docker base images).
+// Validate against what's actually used downstream instead: whether the
+// value works as an Intl.DateTimeFormat timeZone option.
+const isTimezone = (value) => {
+  try {
+    // eslint-disable-next-line no-new
+    new Intl.DateTimeFormat(undefined, { timeZone: value });
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
 
 const isDiscordUserId = (value) => DISCORD_USER_ID_REGEX.test(value);
 
