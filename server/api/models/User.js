@@ -238,7 +238,14 @@ const LANGUAGES = [
 ];
 
 // TODO: find better way to handle apiKeyHash and apiKeyCreatedAt
-const PRIVATE_FIELD_NAMES = ['email', 'apiKeyPrefix', 'apiKeyHash', 'isSsoUser', 'apiKeyCreatedAt'];
+const PRIVATE_FIELD_NAMES = [
+  'email',
+  'apiKeyPrefix',
+  'apiKeyHash',
+  'isSsoUser',
+  'apiKeyCreatedAt',
+  'lastTimezone',
+];
 
 const PERSONAL_FIELD_NAMES = [
   'language',
@@ -399,6 +406,12 @@ module.exports = {
     termsAcceptedAt: {
       type: 'ref',
       columnName: 'terms_accepted_at',
+    },
+    lastTimezone: {
+      type: 'string',
+      isNotEmptyString: true,
+      allowNull: true,
+      columnName: 'last_timezone',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

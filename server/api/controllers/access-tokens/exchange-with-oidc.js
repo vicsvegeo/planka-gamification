@@ -36,6 +36,11 @@
  *                 type: boolean
  *                 description: Whether to include HTTP-only authentication cookie
  *                 example: true
+ *               timezone:
+ *                 type: string
+ *                 maxLength: 128
+ *                 description: IANA timezone reported by the client, stored as the user's last-known timezone
+ *                 example: America/New_York
  *     responses:
  *       200:
  *         description: OIDC exchange successful
@@ -162,6 +167,7 @@
  */
 
 const { getRemoteAddress } = require('../../../utils/remote-address');
+const { isTimezone } = require('../../../utils/validators');
 
 const Errors = {
   INVALID_OIDC_CONFIGURATION: {
@@ -204,6 +210,11 @@ module.exports = {
     },
     withHttpOnlyToken: {
       type: 'boolean',
+    },
+    timezone: {
+      type: 'string',
+      maxLength: 128,
+      custom: isTimezone,
     },
   },
 
@@ -260,6 +271,7 @@ module.exports = {
         request: this.req,
         response: this.res,
         withHttpOnlyToken: inputs.withHttpOnlyToken,
+        timezone: inputs.timezone,
       })
       .intercept('adminLoginRequiredToInitializeInstance', (error) => ({
         adminLoginRequiredToInitializeInstance: error.raw,

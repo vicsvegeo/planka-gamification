@@ -36,6 +36,11 @@
  *                 type: boolean
  *                 description: Whether to include an HTTP-only authentication cookie
  *                 example: true
+ *               timezone:
+ *                 type: string
+ *                 maxLength: 128
+ *                 description: IANA timezone reported by the client, stored as the user's last-known timezone
+ *                 example: America/New_York
  *     responses:
  *       200:
  *         description: Login successful
@@ -107,7 +112,7 @@
 
 const bcrypt = require('bcrypt');
 
-const { isEmailOrUsername } = require('../../../utils/validators');
+const { isEmailOrUsername, isTimezone } = require('../../../utils/validators');
 const { getRemoteAddress } = require('../../../utils/remote-address');
 
 const Errors = {
@@ -143,6 +148,11 @@ module.exports = {
     },
     withHttpOnlyToken: {
       type: 'boolean',
+    },
+    timezone: {
+      type: 'string',
+      maxLength: 128,
+      custom: isTimezone,
     },
   },
 
@@ -206,6 +216,7 @@ module.exports = {
         request: this.req,
         response: this.res,
         withHttpOnlyToken: inputs.withHttpOnlyToken,
+        timezone: inputs.timezone,
       })
       .intercept('adminLoginRequiredToInitializeInstance', (error) => ({
         adminLoginRequiredToInitializeInstance: error.raw,

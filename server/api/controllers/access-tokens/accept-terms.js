@@ -39,6 +39,11 @@
  *                 nullable: true
  *                 description: Preferred language for user interface and notifications (used only if user language is not set)
  *                 example: en-US
+ *               timezone:
+ *                 type: string
+ *                 maxLength: 128
+ *                 description: IANA timezone reported by the client, stored as the user's last-known timezone
+ *                 example: America/New_York
  *     responses:
  *       200:
  *         description: Terms accepted successfully
@@ -98,6 +103,7 @@
  */
 
 const { getRemoteAddress } = require('../../../utils/remote-address');
+const { isTimezone } = require('../../../utils/validators');
 
 const { AccessTokenSteps } = require('../../../constants');
 
@@ -130,6 +136,11 @@ module.exports = {
       type: 'string',
       isIn: User.LANGUAGES,
       allowNull: true,
+    },
+    timezone: {
+      type: 'string',
+      maxLength: 128,
+      custom: isTimezone,
     },
   },
 
@@ -194,6 +205,10 @@ module.exports = {
 
     if (!user.language && inputs.initialLanguage) {
       values.language = inputs.initialLanguage;
+    }
+
+    if (inputs.timezone) {
+      values.lastTimezone = inputs.timezone;
     }
 
     ({ user } = await User.qm.updateOne(user.id, values));

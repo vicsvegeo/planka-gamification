@@ -40,6 +40,8 @@ const isEmailOrUsername = (value) =>
 
 const isDueDate = (value) => moment(value, moment.ISO_8601, true).isValid();
 
+const isTimezone = (value) => Intl.supportedValuesOf('timeZone').includes(value);
+
 const isStopwatch = (value) => {
   if (!_.isPlainObject(value) || _.size(value) !== 2) {
     return false;
@@ -72,5 +74,6 @@ module.exports = {
   isPassword,
   isEmailOrUsername,
   isDueDate,
+  isTimezone,
   isStopwatch,
 };

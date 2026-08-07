@@ -4,6 +4,7 @@
  */
 
 const { AccessTokenSteps } = require('../../../constants');
+const { isTimezone } = require('../../../utils/validators');
 
 const Errors = {
   ADMIN_LOGIN_REQUIRED_TO_INITIALIZE_INSTANCE: {
@@ -34,6 +35,11 @@ module.exports = {
     withHttpOnlyToken: {
       type: 'boolean',
     },
+    timezone: {
+      type: 'string',
+      maxLength: 128,
+      custom: isTimezone,
+    },
   },
 
   exits: {
@@ -42,6 +48,12 @@ module.exports = {
   },
 
   async fn(inputs) {
+    if (inputs.timezone) {
+      await User.qm.updateOne(inputs.user.id, {
+        lastTimezone: inputs.timezone,
+      });
+    }
+
     const internalConfig = await InternalConfig.qm.getOneMain();
 
     if (!internalConfig.isInitialized) {
