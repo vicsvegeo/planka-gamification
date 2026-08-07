@@ -18,6 +18,13 @@
  * (e.g. manual triggers, or the due-today tier where every hour is a slot)
  * never double-sends. Dedup is per card, not per recipient, because that's
  * the shape of the existing card_reminders table (id, card_id, sent_at).
+ *
+ * daysUntilDue (and therefore the tier) is computed per recipient, from the
+ * calendar-date difference between dueDate and "now" as observed in THAT
+ * recipient's timezone — not raw UTC dates. A card due 09:00 UTC is already
+ * "today" for a recipient east of UTC while it's still "yesterday evening"
+ * UTC-wise, and still "tomorrow" for a recipient far west of UTC; comparing
+ * UTC calendar dates instead would miscategorize the tier for both.
  */
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
@@ -30,12 +37,37 @@ const WAKING_HOURS_SPAN = WAKING_HOURS_END - WAKING_HOURS_START;
 
 const DEFAULT_TIMEZONE = 'UTC';
 
-const computeDaysUntilDue = (dueDate, now) => {
-  const startOfUtcDay = (date) =>
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+// { dateKey: 'YYYY-MM-DD', hour: 0-23 } for `date`, as observed in `timeZone`.
+const getLocalDateParts = (date, timeZone) => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23',
+  })
+    .formatToParts(date)
+    .reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
+
+  return {
+    dateKey: `${parts.year}-${parts.month}-${parts.day}`,
+    hour: Number(parts.hour) % 24,
+  };
+};
+
+// Calendar-day difference between dueDate and now, both read as local
+// calendar dates in `timeZone` (not raw UTC dates — see file header).
+const computeDaysUntilDue = (dueDate, now, timeZone) => {
+  const startOfLocalDay = (date) => {
+    const { dateKey } = getLocalDateParts(date, timeZone);
+    const [year, month, day] = dateKey.split('-').map(Number);
+
+    return Date.UTC(year, month - 1, day);
+  };
   const msPerDay = 24 * 60 * 60 * 1000;
 
-  return Math.round((startOfUtcDay(dueDate) - startOfUtcDay(now)) / msPerDay);
+  return Math.round((startOfLocalDay(dueDate) - startOfLocalDay(now)) / msPerDay);
 };
 
 // Target slot hours (0-23, local time) for today, given how many days out the card is.
@@ -57,25 +89,6 @@ const computeSlotHours = (daysUntilDue) => {
   return _.range(targetCount).map((i) =>
     Math.round(WAKING_HOURS_START + (i + 1) * (WAKING_HOURS_SPAN / (targetCount + 1))),
   );
-};
-
-// { dateKey: 'YYYY-MM-DD', hour: 0-23 } for `date`, as observed in `timeZone`.
-const getLocalDateParts = (date, timeZone) => {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    hourCycle: 'h23',
-  })
-    .formatToParts(date)
-    .reduce((result, part) => ({ ...result, [part.type]: part.value }), {});
-
-  return {
-    dateKey: `${parts.year}-${parts.month}-${parts.day}`,
-    hour: Number(parts.hour) % 24,
-  };
 };
 
 module.exports = {
@@ -124,9 +137,7 @@ module.exports = {
     let sentCount = 0;
 
     for (const card of cards) {
-      const daysUntilDue = computeDaysUntilDue(new Date(card.dueDate), now);
-      const isOverdue = daysUntilDue < 0;
-      const slotHours = computeSlotHours(daysUntilDue);
+      const dueDate = new Date(card.dueDate);
 
       const memberUserIds = (memberUserIdsByCardId[card.id] || []).map((m) => m.userId);
 
@@ -154,6 +165,8 @@ module.exports = {
       const dueRecipients = recipients
         .map((recipient) => {
           const timeZone = recipient.lastTimezone || DEFAULT_TIMEZONE;
+          const daysUntilDue = computeDaysUntilDue(dueDate, now, timeZone);
+          const slotHours = computeSlotHours(daysUntilDue);
           const { dateKey: todayKey, hour: currentHour } = getLocalDateParts(now, timeZone);
 
           const slotIndex = slotHours.indexOf(currentHour);
@@ -170,7 +183,15 @@ module.exports = {
             return null;
           }
 
-          return { recipient, timeZone, currentHour, slotIndex };
+          return {
+            recipient,
+            timeZone,
+            currentHour,
+            slotIndex,
+            slotHours,
+            daysUntilDue,
+            isOverdue: daysUntilDue < 0,
+          };
         })
         .filter(Boolean);
 
@@ -178,9 +199,6 @@ module.exports = {
         continue;
       }
 
-      // Message content only depends on the card (tier is driven by
-      // daysUntilDue, which is card-level), so it's built once and reused
-      // for every due recipient of this card.
       const board = boardById[card.boardId];
 
       const cardTasks = (taskListsByCardId[card.id] || []).flatMap(
@@ -194,34 +212,39 @@ module.exports = {
             }
           : null;
 
-      const message = buildDueDateReminderMessage({
-        card,
-        list: listById[card.listId],
-        board,
-        project: board && projectById[board.projectId],
-        taskProgress,
-        dueDate: new Date(card.dueDate),
-        daysUntilDue,
-        now,
-      });
-
+      // Tier (daysUntilDue) is now per-recipient, so the message — its
+      // wording depends on the tier — is built per recipient too, rather
+      // than once for the whole card.
       await Promise.all(
-        dueRecipients.map(({ recipient, timeZone, currentHour, slotIndex }) => {
-          sails.log.info(
-            `[card-reminders] DUE — card=${card.id} ("${card.name}") ` +
-              `recipient=${recipient.id} (${recipient.email}) tz=${timeZone} ` +
-              `daysUntilDue=${daysUntilDue} overdue=${isOverdue} ` +
-              `slot=${slotIndex + 1}/${slotHours.length} (local hour ${currentHour}:00)`,
-          );
+        dueRecipients.map(
+          ({ recipient, timeZone, currentHour, slotIndex, slotHours, daysUntilDue, isOverdue }) => {
+            const message = buildDueDateReminderMessage({
+              card,
+              list: listById[card.listId],
+              board,
+              project: board && projectById[board.projectId],
+              taskProgress,
+              dueDate,
+              daysUntilDue,
+              now,
+            });
 
-          return sails.helpers.cardReminders.sendDueDateReminder(recipient, message, {
-            cardId: card.id,
-            cardName: card.name,
-            daysUntilDue,
-            overdue: isOverdue,
-            slot: `${slotIndex + 1}/${slotHours.length}`,
-          });
-        }),
+            sails.log.info(
+              `[card-reminders] DUE — card=${card.id} ("${card.name}") ` +
+                `recipient=${recipient.id} (${recipient.email}) tz=${timeZone} ` +
+                `daysUntilDue=${daysUntilDue} overdue=${isOverdue} ` +
+                `slot=${slotIndex + 1}/${slotHours.length} (local hour ${currentHour}:00)`,
+            );
+
+            return sails.helpers.cardReminders.sendDueDateReminder(recipient, message, {
+              cardId: card.id,
+              cardName: card.name,
+              daysUntilDue,
+              overdue: isOverdue,
+              slot: `${slotIndex + 1}/${slotHours.length}`,
+            });
+          },
+        ),
       );
 
       // One card_reminders row per card per send event, regardless of how
