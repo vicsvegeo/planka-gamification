@@ -11,8 +11,9 @@
  * separate notifications-bot service over HTTP (POST {BOT_SERVICE_URL}/dm,
  * authenticated via the X-Bot-Secret header). `meta` is passed through
  * as-is so the bot has whatever identifying info the caller has (e.g.
- * projectId for nudges, cardId for due-date reminders) — needed for the
- * bot's own discord_nudge_messages logging (separate piece). If the call
+ * projectId for nudges, cardId for due-date reminders) — the bot uses
+ * projectId to attach snooze buttons (customId embeds it directly, no
+ * server-side lookup needed). If the call
  * fails for any reason (bot down, network error, timeout, non-2xx response
  * — including the bot not being configured/deployed yet, since
  * BOT_SERVICE_URL is then unset), delivery falls back to Apprise for that
