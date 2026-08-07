@@ -115,6 +115,17 @@ services:
     environment:
       - PROXY_TARGET=http://planka-server:1337
 
+  planka-notifications-bot:
+    build:
+      context: ../planka-notifications-bot
+    restart: on-failure
+    environment:
+      - DATABASE_URL=postgresql://postgres@postgres/planka
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     restart: on-failure
