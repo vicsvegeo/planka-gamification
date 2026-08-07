@@ -18,10 +18,7 @@ const COLOR_BY_TIER = {
   [Tiers.VERY_STALE]: 0xe74c3c,
 };
 
-// { title, body(name, daysSilent) } per tier. Only the very-stale tier
-// carries the snooze hint — the snooze mechanisms it references (chat
-// command, reaction) aren't built yet, but the hint text is harmless ahead
-// of that and becomes functional once those pieces land.
+// { title, body(name, daysSilent) } per tier.
 const TEMPLATES_BY_TIER = {
   [Tiers.STALE]: {
     title: 'Inactive Project',
@@ -29,9 +26,7 @@ const TEMPLATES_BY_TIER = {
   },
   [Tiers.VERY_STALE]: {
     title: 'Project Very Inactive',
-    body: (name, daysSilent) =>
-      `🔴 '${name}' has been quiet for ${daysSilent} days. Reply 'snooze ${name} <duration>' ` +
-      'to mute these, or react 😴 to snooze.',
+    body: (name, daysSilent) => `🔴 '${name}' has been quiet for ${daysSilent} days.`,
   },
 };
 
