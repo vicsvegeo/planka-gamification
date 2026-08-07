@@ -47,6 +47,14 @@ const getShared = ({ exceptIdOrIds } = {}) => {
   return defaultFind(criteria);
 };
 
+// Has recorded activity — the candidate set for the inactivity nudge scanner.
+const getWithLastActivity = () =>
+  defaultFind({
+    lastActivityAt: {
+      '!=': null,
+    },
+  });
+
 const getOneById = (id) => Project.findOne(id);
 
 const updateOne = (criteria, values) => Project.updateOne(criteria).set({ ...values });
@@ -60,6 +68,7 @@ module.exports = {
   createOne,
   getByIds,
   getShared,
+  getWithLastActivity,
   getOneById,
   updateOne,
   deleteOne,
