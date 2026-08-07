@@ -46,6 +46,11 @@
  *                 maxLength: 128
  *                 description: Name/title of the list
  *                 example: To Do
+ *               color:
+ *                 type: string
+ *                 enum: [berry-red, pumpkin-orange, lagoon-blue, pink-tulip, light-mud, orange-peel, bright-moss, antique-blue, dark-granite, turquoise-sea]
+ *                 description: Color for the list
+ *                 example: lagoon-blue
  *     responses:
  *       200:
  *         description: List created successfully
@@ -100,6 +105,11 @@ module.exports = {
       maxLength: 128,
       required: true,
     },
+    color: {
+      type: 'string',
+      isIn: List.COLORS,
+      required: false,
+    },
   },
 
   exits: {
@@ -131,7 +141,7 @@ module.exports = {
       throw Errors.NOT_ENOUGH_RIGHTS;
     }
 
-    const values = _.pick(inputs, ['type', 'position', 'name']);
+    const values = _.pick(inputs, ['type', 'position', 'name', 'color']);
 
     const list = await sails.helpers.lists.createOne.with({
       project,
