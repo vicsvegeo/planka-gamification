@@ -240,6 +240,14 @@ module.exports = {
         return card;
       }
 
+      // NEW — inactivity tracking: any field update or move on a not-yet-closed
+      // card counts as project activity; closed cards don't reset the clock.
+      if (!card.isClosed) {
+        await Project.qm.updateOne(project.id, {
+          lastActivityAt: new Date().toISOString(),
+        });
+      }
+
       // NEW — gamification: fires exactly once, on the false -> true isClosed transition.
       if (values.isClosed) {
         sails.helpers.gamification.awardForCardCompletion

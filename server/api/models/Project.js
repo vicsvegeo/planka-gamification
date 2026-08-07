@@ -156,6 +156,14 @@ module.exports = {
       defaultsTo: false, // TODO: implement via normalizeValues?
       columnName: 'is_hidden',
     },
+    lastActivityAt: {
+      type: 'ref',
+      columnName: 'last_activity_at',
+    },
+    snoozedUntil: {
+      type: 'ref',
+      columnName: 'snoozed_until',
+    },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
     //  ║╣ ║║║╠╩╗║╣  ║║╚═╗
