@@ -95,6 +95,11 @@
  *                 enum: [byDefault, alphabetically, byCreationTime]
  *                 description: Default sort order for projects display
  *                 example: byDefault
+ *               discordUserId:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Discord user ID for DM notifications (self-editable only)
+ *                 example: "168336042535737344"
  *               isSsoUser:
  *                 type: boolean
  *                 description: Whether the user is SSO user (only false value to unlink SSO, for admins)
@@ -127,7 +132,7 @@
  *         $ref: '#/components/responses/Conflict'
  */
 
-const { is } = require('../../../utils/validators');
+const { is, isDiscordUserId } = require('../../../utils/validators');
 const { idInput } = require('../../../utils/inputs');
 
 const Errors = {
@@ -205,6 +210,11 @@ module.exports = {
       type: 'string',
       isIn: Object.values(User.ProjectOrders),
     },
+    discordUserId: {
+      type: 'string',
+      custom: isDiscordUserId,
+      allowNull: true,
+    },
     isSsoUser: {
       type: 'boolean',
       custom: is(false),
@@ -231,7 +241,10 @@ module.exports = {
 
     const availableInputKeys = ['id', 'name', 'avatar', 'phone', 'organization'];
     if (inputs.id === currentUser.id) {
-      availableInputKeys.push(...User.PERSONAL_FIELD_NAMES);
+      // discordUserId is deliberately not in PERSONAL_FIELD_NAMES: it's
+      // self-editable like those fields, but (like lastTimezone) it stays
+      // visible to admins viewing this user, so it's pushed separately here.
+      availableInputKeys.push(...User.PERSONAL_FIELD_NAMES, 'discordUserId');
     } else if (currentUser.role === User.Roles.ADMIN) {
       availableInputKeys.push('role', 'isSsoUser', 'isDeactivated');
     } else {
@@ -283,6 +296,7 @@ module.exports = {
         'defaultEditorMode',
         'defaultHomeView',
         'defaultProjectsOrder',
+        'discordUserId',
         'isSsoUser',
         'isDeactivated',
       ]),

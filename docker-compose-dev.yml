@@ -119,9 +119,12 @@ services:
     build:
       context: ../planka-notifications-bot
     restart: on-failure
+    ports:
+      - 4000:4000
     environment:
       - DATABASE_URL=postgresql://postgres@postgres/planka
       - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - BOT_SERVICE_SECRET=${BOT_SERVICE_SECRET}
     depends_on:
       postgres:
         condition: service_healthy

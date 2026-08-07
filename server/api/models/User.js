@@ -245,6 +245,7 @@ const PRIVATE_FIELD_NAMES = [
   'isSsoUser',
   'apiKeyCreatedAt',
   'lastTimezone',
+  'discordUserId',
 ];
 
 const PERSONAL_FIELD_NAMES = [
@@ -412,6 +413,12 @@ module.exports = {
       isNotEmptyString: true,
       allowNull: true,
       columnName: 'last_timezone',
+    },
+    discordUserId: {
+      type: 'string',
+      isNotEmptyString: true,
+      allowNull: true,
+      columnName: 'discord_user_id',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

@@ -140,6 +140,9 @@ export default {
       customFields_title: 'Custom Fields',
       customerPanel_title: 'Customer Panel',
       dangerZone_title: 'Danger Zone',
+      discordUserId: 'Discord User ID',
+      discordUserIdHelperText:
+        'To find your Discord User ID: enable Developer Mode in Discord (User Settings → Advanced), then right-click your own profile and select "Copy User ID".',
       discoverPlankaPro: '✨ More features for your boards: Discover PLANKA Pro',
       discoverPlankaPro_title: 'Discover PLANKA Pro',
       dismissProBannerFor30Days: 'Dismiss for 30 days',

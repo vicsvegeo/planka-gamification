@@ -12,6 +12,7 @@ const MAX_STRING_ID = '9223372036854775807';
 const ID_REGEX = /^[1-9][0-9]*$/;
 const IDS_WITH_COMMA_REGEX = /^[1-9][0-9]*(,[1-9][0-9]*)*$/;
 const USERNAME_REGEX = /^[a-zA-Z0-9]+((_|\.)?[a-zA-Z0-9])*$/;
+const DISCORD_USER_ID_REGEX = /^[0-9]{15,25}$/;
 
 const is = (defaultValue) => (value) => value === defaultValue;
 
@@ -42,6 +43,8 @@ const isDueDate = (value) => moment(value, moment.ISO_8601, true).isValid();
 
 const isTimezone = (value) => Intl.supportedValuesOf('timeZone').includes(value);
 
+const isDiscordUserId = (value) => DISCORD_USER_ID_REGEX.test(value);
+
 const isStopwatch = (value) => {
   if (!_.isPlainObject(value) || _.size(value) !== 2) {
     return false;
@@ -64,6 +67,7 @@ module.exports = {
   ID_REGEX,
   IDS_WITH_COMMA_REGEX,
   USERNAME_REGEX,
+  DISCORD_USER_ID_REGEX,
 
   is,
   isUrl,
@@ -75,5 +79,6 @@ module.exports = {
   isEmailOrUsername,
   isDueDate,
   isTimezone,
+  isDiscordUserId,
   isStopwatch,
 };

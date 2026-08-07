@@ -66,6 +66,11 @@ module.exports.custom = {
   outgoingProxy: process.env.OUTGOING_PROXY,
   swaggerExposed: process.env.SWAGGER_EXPOSED === 'true',
 
+  // Fork addition — internal DM endpoint on the separate notifications bot
+  // service (see api/helpers/card-reminders/send-due-date-reminder.js).
+  botServiceUrl: process.env.BOT_SERVICE_URL,
+  botServiceSecret: process.env.BOT_SERVICE_SECRET,
+
   s3Endpoint: process.env.S3_ENDPOINT,
   s3Region: process.env.S3_REGION,
   s3AccessKeyId: process.env.S3_ACCESS_KEY_ID,
