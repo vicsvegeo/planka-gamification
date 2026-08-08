@@ -75,7 +75,18 @@ module.exports = {
     const boardById = _.keyBy(boards, 'id');
 
     const boardIds = sails.helpers.utils.mapRecords(boards);
-    const cards = await Card.qm.getByBoardIds(boardIds);
+    const allCards = await Card.qm.getByBoardIds(boardIds);
+
+    // Exclude cards sitting in an archive/trash list — those are deleted in
+    // all but name, and shouldn't make their assignee count as "this
+    // project has an assignee" (same gap as the due-date scanner; see
+    // Card.qm.getIncompleteWithDueDate).
+    const listIds = sails.helpers.utils.mapRecords(allCards, 'listId', true);
+    const listById = _.keyBy(await List.qm.getByIds(listIds), 'id');
+    const cards = allCards.filter((card) => {
+      const list = listById[card.listId];
+      return list && ![List.Types.ARCHIVE, List.Types.TRASH].includes(list.type);
+    });
     const cardById = _.keyBy(cards, 'id');
 
     const cardIds = sails.helpers.utils.mapRecords(cards);

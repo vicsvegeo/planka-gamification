@@ -29,14 +29,23 @@ const getByBoardIds = (boardIds) =>
     boardId: boardIds,
   });
 
-// Not closed, has a due date — the candidate set for the due-date reminder scanner.
-const getIncompleteWithDueDate = () =>
-  defaultFind({
-    isClosed: false,
-    dueDate: {
-      '!=': null,
-    },
-  });
+// Not closed, has a due date, and not sitting in an archive/trash list (i.e. not
+// deleted) — the candidate set for the due-date reminder scanner. Waterline
+// criteria can't filter on an associated model's column, so this excludes
+// archive/trash via a join against `list` with a native query instead.
+const getIncompleteWithDueDate = async () => {
+  const queryResult = await sails.sendNativeQuery(
+    `SELECT card.* FROM card
+     INNER JOIN list ON card.list_id = list.id
+     WHERE card.is_closed = false
+       AND card.due_date IS NOT NULL
+       AND list.type NOT IN ($1, $2)
+     ORDER BY card.id`,
+    [List.Types.ARCHIVE, List.Types.TRASH],
+  );
+
+  return queryResult.rows.map((row) => transformRowToModel(row));
+};
 
 const getByListId = async (listId, { exceptIdOrIds, sort = ['position', 'id'] } = {}) => {
   const criteria = {
