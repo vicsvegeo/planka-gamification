@@ -145,7 +145,10 @@ const buildDueDateReminderMessage = ({
     { name: 'Due', value: `<t:${dueUnixSeconds}:F> (<t:${dueUnixSeconds}:R>)` },
     ...(project ? [{ name: 'Project', value: project.name, inline: true }] : []),
     ...(board ? [{ name: 'Board', value: board.name, inline: true }] : []),
-    ...(list ? [{ name: 'List', value: list.name, inline: true }] : []),
+    // list.name is nullable in the schema (unlike project.name/board.name) —
+    // e.g. archive/trash-type lists may have no name set. A null field value
+    // makes discord.js's EmbedBuilder.addFields reject the whole embed.
+    ...(list ? [{ name: 'List', value: list.name || 'Untitled', inline: true }] : []),
     ...(taskProgress
       ? [
           {
