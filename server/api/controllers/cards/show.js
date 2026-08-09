@@ -40,6 +40,12 @@
  *                           type: boolean
  *                           description: Whether the current user is subscribed to the card
  *                           example: true
+ *                         snoozedUntil:
+ *                           type: string
+ *                           format: date-time
+ *                           nullable: true
+ *                           description: Silences due-date reminders for this card until this time, for the current user only
+ *                           example: 2024-01-08T00:00:00.000Z
  *                 included:
  *                   type: object
  *                   required:
@@ -155,6 +161,10 @@ module.exports = {
 
     card.isSubscribed = await sails.helpers.users.isCardSubscriber(currentUser.id, card.id);
     await sails.helpers.cards.attachGamification.with({ cards: card });
+
+    const cardSnooze = await CardSnooze.qm.getOneByCardIdAndUserId(card.id, currentUser.id);
+    card.snoozedUntil =
+      cardSnooze && new Date(cardSnooze.snoozedUntil) > new Date() ? cardSnooze.snoozedUntil : null;
 
     const users = card.creatorUserId ? await User.qm.getByIds([card.creatorUserId]) : [];
     const cardMemberships = await CardMembership.qm.getByCardId(card.id);

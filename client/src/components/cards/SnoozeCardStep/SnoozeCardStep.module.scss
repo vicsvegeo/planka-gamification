@@ -1,0 +1,25 @@
+/*!
+ * Fork addition
+ */
+
+:global(#app) {
+  .text {
+    color: #444444;
+    font-size: 12px;
+    font-weight: bold;
+    padding-bottom: 8px;
+  }
+
+  .durations {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .button {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

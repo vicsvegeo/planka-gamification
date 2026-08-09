@@ -104,6 +104,12 @@
  *                 nullable: true
  *                 description: Loose due date; completing on or before it grants bonus XP (missing it costs nothing)
  *                 example: 2024-01-01T00:00:00.000Z
+ *               snoozedUntil:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 description: Silences due-date reminders for this card until this time, for the current user only (null to un-snooze)
+ *                 example: 2024-01-08T00:00:00.000Z
  *     responses:
  *       200:
  *         description: Card updated successfully
@@ -215,6 +221,11 @@ module.exports = {
       custom: isDueDate,
       allowNull: true,
     },
+    snoozedUntil: {
+      type: 'string',
+      custom: isDueDate,
+      allowNull: true,
+    },
   },
 
   exits: {
@@ -263,7 +274,7 @@ module.exports = {
       throw Errors.CARD_NOT_FOUND; // Forbidden
     }
 
-    const availableInputKeys = ['id', 'isSubscribed'];
+    const availableInputKeys = ['id', 'isSubscribed', 'snoozedUntil'];
     if (boardMembership.role === BoardMembership.Roles.EDITOR) {
       availableInputKeys.push(
         'boardId',
@@ -339,6 +350,7 @@ module.exports = {
       'isDueCompleted',
       'stopwatch',
       'isSubscribed',
+      'snoozedUntil',
     ]);
 
     card = await sails.helpers.cards.updateOne

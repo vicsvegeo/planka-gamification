@@ -62,6 +62,9 @@ export default class extends BaseModel {
     bonusAwarded: attr({
       getDefault: () => false,
     }),
+    snoozedUntil: attr({
+      getDefault: () => null,
+    }),
     boardId: fk({
       to: 'Board',
       as: 'board',

@@ -47,7 +47,7 @@ module.exports = {
 
   // TODO: use normalizeValues and refactor
   async fn(inputs) {
-    const { isSubscribed, ...values } = inputs.values;
+    const { isSubscribed, snoozedUntil, ...values } = inputs.values;
 
     if (values.project && values.project.id === inputs.project.id) {
       delete values.project;
@@ -442,6 +442,33 @@ module.exports = {
 
         // TODO: send webhooks
       }
+    }
+
+    // NEW — per-user, per-card due-date reminder snoozing (mirrors project_snooze,
+    // scoped to a card; a fully separate mechanism that never touches project nudges).
+    if (!_.isUndefined(snoozedUntil)) {
+      if (snoozedUntil) {
+        await CardSnooze.qm.upsertOneByCardIdAndUserId(card.id, inputs.actorUser.id, snoozedUntil);
+      } else {
+        await CardSnooze.qm.deleteOne({
+          cardId: card.id,
+          userId: inputs.actorUser.id,
+        });
+      }
+
+      sails.sockets.broadcast(
+        `user:${inputs.actorUser.id}`,
+        'cardUpdate',
+        {
+          item: {
+            snoozedUntil,
+            id: card.id,
+          },
+        },
+        inputs.request,
+      );
+
+      // TODO: send webhooks
     }
 
     return card;

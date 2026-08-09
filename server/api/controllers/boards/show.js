@@ -249,9 +249,25 @@ module.exports = {
       {},
     );
 
+    const cardSnoozes = await CardSnooze.qm.getByCardIdsAndUserId(cardIds, currentUser.id);
+
+    const now = new Date();
+    const snoozedUntilByCardId = cardSnoozes.reduce((result, cardSnooze) => {
+      if (new Date(cardSnooze.snoozedUntil) <= now) {
+        return result;
+      }
+
+      return {
+        ...result,
+        [cardSnooze.cardId]: cardSnooze.snoozedUntil,
+      };
+    }, {});
+
     cards.forEach((card) => {
       // eslint-disable-next-line no-param-reassign
       card.isSubscribed = isSubscribedByCardId[card.id] || false;
+      // eslint-disable-next-line no-param-reassign
+      card.snoozedUntil = snoozedUntilByCardId[card.id] || null;
     });
 
     await sails.helpers.cards.attachGamification.with({ cards });

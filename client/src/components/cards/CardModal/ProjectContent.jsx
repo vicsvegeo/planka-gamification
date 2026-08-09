@@ -32,6 +32,7 @@ import EditDueDateStep from '../EditDueDateStep';
 import EditStopwatchStep from '../EditStopwatchStep';
 import EditXpStep from '../EditXpStep';
 import EditSoftDueDateStep from '../EditSoftDueDateStep';
+import SnoozeCardStep from '../SnoozeCardStep';
 import ExpandableMarkdown from '../../common/ExpandableMarkdown';
 import EditMarkdown from '../../common/EditMarkdown';
 import ConfirmationStep from '../../common/ConfirmationStep';
@@ -298,6 +299,7 @@ const ProjectContent = React.memo(() => {
   const EditStopwatchPopup = usePopupInClosableContext(EditStopwatchStep);
   const EditXpPopup = usePopupInClosableContext(EditXpStep);
   const EditSoftDueDatePopup = usePopupInClosableContext(EditSoftDueDateStep);
+  const SnoozeCardPopup = usePopupInClosableContext(SnoozeCardStep);
   const AddTaskListPopup = usePopupInClosableContext(AddTaskListStep);
   const AddAttachmentPopup = usePopupInClosableContext(AddAttachmentStep);
   const AddCustomFieldGroupPopup = usePopupInClosableContext(AddCustomFieldGroupStep);
@@ -749,6 +751,19 @@ const ProjectContent = React.memo(() => {
                       </>
                     )}
                   </Button>
+                )}
+                {canSubscribe && card.dueDate && (
+                  <SnoozeCardPopup cardId={card.id}>
+                    <Button fluid className={classNames(styles.actionButton, styles.hidable)}>
+                      <Icon
+                        name={card.snoozedUntil ? 'moon' : 'moon outline'}
+                        className={styles.actionIcon}
+                      />
+                      {t('common.snoozeReminders', {
+                        context: 'title',
+                      })}
+                    </Button>
+                  </SnoozeCardPopup>
                 )}
                 {canRestore && (isInArchiveList || isInTrashList) && (
                   <Button

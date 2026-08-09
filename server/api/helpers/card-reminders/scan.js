@@ -25,6 +25,14 @@
  * "today" for a recipient east of UTC while it's still "yesterday evening"
  * UTC-wise, and still "tomorrow" for a recipient far west of UTC; comparing
  * UTC calendar dates instead would miscategorize the tier for both.
+ *
+ * card_snooze (per card, per user — a fully separate mechanism from
+ * project_snooze/project_nudges) filters out individual recipients whose
+ * slot is otherwise due this run: skipping one recipient never affects any
+ * other recipient on the same card, and — same precedent as
+ * project-nudges/scan.js for "every candidate recipient snoozed" — if that
+ * filtering empties a card's due-this-run recipient list, nothing is
+ * dispatched and no card_reminders row is logged for it this run.
  */
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
@@ -162,7 +170,7 @@ module.exports = {
 
       const cardRemindersToday = remindersByCardId[card.id] || [];
 
-      const dueRecipients = recipients
+      let dueRecipients = recipients
         .map((recipient) => {
           const timeZone = recipient.lastTimezone || DEFAULT_TIMEZONE;
           const daysUntilDue = computeDaysUntilDue(dueDate, now, timeZone);
@@ -198,6 +206,33 @@ module.exports = {
       if (dueRecipients.length === 0) {
         continue;
       }
+
+      // card_snooze: skip this specific recipient's reminder for this specific card only —
+      // never affects other recipients on the same card, or project-level nudges.
+      const notSnoozedDueRecipients = [];
+      for (const dueRecipient of dueRecipients) {
+        const isSnoozed = await CardSnooze.qm.isSnoozed(card.id, dueRecipient.recipient.id);
+
+        if (isSnoozed) {
+          sails.log.info(
+            `[card-reminders] Recipient ${dueRecipient.recipient.id} (${dueRecipient.recipient.email}) ` +
+              `has snoozed card ${card.id} ("${card.name}") — skipping this recipient only.`,
+          );
+          continue;
+        }
+
+        notSnoozedDueRecipients.push(dueRecipient);
+      }
+
+      if (notSnoozedDueRecipients.length === 0) {
+        sails.log.info(
+          `[card-reminders] Card ${card.id} ("${card.name}") — every recipient due this run has ` +
+            'this card snoozed; no reminder sent, no row logged.',
+        );
+        continue;
+      }
+
+      dueRecipients = notSnoozedDueRecipients;
 
       const board = boardById[card.boardId];
 
