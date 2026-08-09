@@ -27,6 +27,13 @@
  *         schema:
  *           type: boolean
  *           example: true
+ *       - name: timezone
+ *         in: query
+ *         required: false
+ *         description: IANA timezone reported by the client, stored as the current user's last-known timezone if changed
+ *         schema:
+ *           type: string
+ *           example: America/New_York
  *     responses:
  *       200:
  *         description: User details retrieved successfully
@@ -58,7 +65,7 @@
  *         $ref: '#/components/responses/NotFound'
  */
 
-const { ID_REGEX, MAX_STRING_ID, isIdInRange } = require('../../../utils/validators');
+const { ID_REGEX, MAX_STRING_ID, isIdInRange, isTimezone } = require('../../../utils/validators');
 
 const Errors = {
   USER_NOT_FOUND: {
@@ -84,6 +91,11 @@ module.exports = {
     subscribe: {
       type: 'boolean',
     },
+    timezone: {
+      type: 'string',
+      maxLength: 128,
+      custom: isTimezone,
+    },
   },
 
   exits: {
@@ -104,6 +116,15 @@ module.exports = {
 
       if (inputs.subscribe && this.req.isSocket) {
         sails.sockets.join(this.req, `user:${user.id}`);
+      }
+
+      // NEW — timezone tracking: this endpoint is hit far more often than login (every
+      // app boot/reconnect), so only write when the timezone actually changed, and don't
+      // make the caller wait on it.
+      if (inputs.timezone && inputs.timezone !== currentUser.lastTimezone) {
+        User.qm.updateOne(currentUser.id, { lastTimezone: inputs.timezone }).catch((error) => {
+          sails.log.error('Failed to update last timezone:', error);
+        });
       }
     } else {
       if (!sails.helpers.users.isAdminOrProjectOwner(currentUser)) {

@@ -5,6 +5,7 @@
 
 import http from './http';
 import socket from './socket';
+import getTimezone from '../utils/timezone';
 
 /* Actions */
 
@@ -18,8 +19,15 @@ const createUser = (data, headers) => socket.post('/users', data, headers);
     item: transformUser(body.item),
   })); */
 
-const getCurrentUser = (subscribe, headers) =>
-  socket.get(`/users/me${subscribe ? '?subscribe=true' : ''}`, undefined, headers);
+const getCurrentUser = (subscribe, headers) => {
+  const timezone = getTimezone();
+
+  return socket.get(
+    `/users/me${subscribe ? '?subscribe=true' : ''}`,
+    timezone ? { timezone } : undefined,
+    headers,
+  );
+};
 
 const getUserGamificationStats = (id, headers) =>
   socket.get(`/users/${id}/gamification-stats`, undefined, headers);
