@@ -3,7 +3,13 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
-const { levelForXp, computeOnTimeBonus, isOnTime } = require('../../../utils/gamification');
+const {
+  levelForXp,
+  computeOnTimeBonus,
+  isOnTime,
+  getDaysOverdue,
+  computeOverdueXp,
+} = require('../../../utils/gamification');
 
 // Fires once, exactly at the moment a card transitions into a closed list. Awards XP
 // (plus a one-time on-time bonus), recomputes the completer's level, runs the badge
@@ -35,9 +41,19 @@ module.exports = {
     }
 
     const completedAt = new Date().toISOString();
+
+    // softDueDate bonus — independent system, untouched by the overdue penalty below.
+    // Always computed off the raw baseXp, never the decayed amount.
     const onTime = isOnTime(completedAt, cardGamification.softDueDate);
     const bonusXp = onTime ? computeOnTimeBonus(cardGamification.baseXp) : 0;
-    const xpGained = cardGamification.baseXp + bonusXp;
+
+    // dueDate overdue penalty — separate system driven by Card.dueDate, not
+    // CardGamification.softDueDate. Decays only the base XP component; the bonus above is
+    // added on top afterwards so neither calculation clobbers the other's contribution.
+    const overdueDays = getDaysOverdue(completedAt, card.dueDate);
+    const baseXpAwarded = computeOverdueXp(cardGamification.baseXp, overdueDays);
+
+    const xpGained = baseXpAwarded + bonusXp;
 
     await CardGamification.qm.updateOne(cardGamification.id, {
       xpAwarded: true,
