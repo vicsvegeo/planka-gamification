@@ -395,6 +395,7 @@ export default {
       levelUpToastTitle: 'Level up!',
       levelUpToastBody: "You've reached level {{level}}",
       badgeUnlockedToastTitle: 'Badge unlocked!',
+      xpGainedToastBody: '+{{xp}} XP',
     },
 
     action: {

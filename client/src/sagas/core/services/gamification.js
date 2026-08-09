@@ -10,6 +10,7 @@ import request from '../request';
 import actions from '../../../actions';
 import api from '../../../api';
 import ToastTypes from '../../../constants/ToastTypes';
+import playChime from '../../../utils/play-chime';
 
 export function* fetchGamificationStats() {
   let stats;
@@ -31,6 +32,17 @@ export function* handleGamificationEvent(event) {
   yield put(actions.handleGamificationEvent(event));
 
   switch (event.kind) {
+    case 'statsUpdate':
+      if (event.xpGained > 0) {
+        yield call(toast, {
+          type: ToastTypes.XP_GAINED,
+          params: {
+            xp: event.xpGained,
+          },
+        });
+      }
+
+      break;
     case 'levelUp':
       yield call(toast, {
         type: ToastTypes.LEVEL_UP,
@@ -38,6 +50,8 @@ export function* handleGamificationEvent(event) {
           level: event.level,
         },
       });
+
+      yield call(playChime);
 
       break;
     case 'badgeUnlocked':
@@ -47,6 +61,8 @@ export function* handleGamificationEvent(event) {
           badge: event.badge,
         },
       });
+
+      yield call(playChime);
 
       break;
     default:

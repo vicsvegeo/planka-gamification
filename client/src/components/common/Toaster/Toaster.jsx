@@ -14,6 +14,7 @@ import SourceCardNotCopyableToast from './SourceCardNotCopyableToast';
 import SourceCardNotMovableToast from './SourceCardNotMovableToast';
 import LevelUpToast from './LevelUpToast';
 import BadgeUnlockedToast from './BadgeUnlockedToast';
+import XpGainedToast from './XpGainedToast';
 
 const TOAST_BY_TYPE = {
   [ToastTypes.FILE_IS_TOO_BIG]: FileIsTooBigToast,
@@ -23,6 +24,7 @@ const TOAST_BY_TYPE = {
   [ToastTypes.SOURCE_CARD_NOT_MOVABLE]: SourceCardNotMovableToast,
   [ToastTypes.LEVEL_UP]: LevelUpToast,
   [ToastTypes.BADGE_UNLOCKED]: BadgeUnlockedToast,
+  [ToastTypes.XP_GAINED]: XpGainedToast,
 };
 
 const Toaster = React.memo(() => (
