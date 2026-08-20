@@ -17,6 +17,14 @@
  * successful dispatch to at least one recipient; if every candidate
  * recipient has this project snoozed (or every dispatch attempt fails),
  * nothing is logged and the project is re-evaluated on the next run.
+ *
+ * Open-work gate: staleness alone isn't sufficient — a project is only
+ * nudged if it has at least one card in an open (non-closed-type) list.
+ * A project can go stale by lastActivityAt while every card sits done in a
+ * closed-type list, in which case there's nothing left to nudge about; it's
+ * skipped entirely (no dispatch, no project_nudges row), same as a fully
+ * snoozed project. This is an additional necessary condition on top of, not
+ * a replacement for, the staleness/dedup/snooze checks below.
  */
 
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
@@ -89,6 +97,30 @@ module.exports = {
     });
     const cardById = _.keyBy(cards, 'id');
 
+    // Projects with zero cards left in an open (non-closed-type) list have
+    // nothing left to nudge about, even if they're stale by lastActivityAt —
+    // e.g. every card done and sitting in a closed-type list. Reuses the
+    // same isClosed/list-type distinction as the due-date scanner's
+    // incomplete-cards query (Card.qm.getIncompleteWithDueDate), extended to
+    // also treat List.Types.CLOSED as "no outstanding work" alongside
+    // ARCHIVE/TRASH.
+    const projectIdsWithOpenWork = new Set();
+    cards.forEach((card) => {
+      if (card.isClosed) {
+        return;
+      }
+
+      const list = listById[card.listId];
+      if (list.type !== List.Types.ACTIVE) {
+        return;
+      }
+
+      const board = boardById[card.boardId];
+      if (board) {
+        projectIdsWithOpenWork.add(board.projectId);
+      }
+    });
+
     const cardIds = sails.helpers.utils.mapRecords(cards);
     const cardMemberships = await CardMembership.qm.getByCardIds(cardIds);
 
@@ -124,6 +156,14 @@ module.exports = {
       );
 
       if (recentNudge) {
+        continue;
+      }
+
+      if (!projectIdsWithOpenWork.has(project.id)) {
+        sails.log.info(
+          `[project-nudges] Project ${project.id} ("${project.name}") is stale but has no ` +
+            'cards left in an open list — nothing to nudge about; skipping, no row logged.',
+        );
         continue;
       }
 
