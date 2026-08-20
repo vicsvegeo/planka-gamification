@@ -29,6 +29,13 @@ const PROGRESS_BAR_FILLED = '🟩';
 const PROGRESS_BAR_EMPTY = '⬜';
 
 const buildProgressBar = (completed, total) => {
+  // Small task counts render as exact blocks (one per task) rather than a
+  // ratio scaled to PROGRESS_BAR_LENGTH — a 3/5 card shows 5 blocks (3
+  // filled), not a 10-block bar that implies a task count it doesn't have.
+  if (total <= PROGRESS_BAR_LENGTH) {
+    return PROGRESS_BAR_FILLED.repeat(completed) + PROGRESS_BAR_EMPTY.repeat(total - completed);
+  }
+
   const filledCount = Math.round((completed / total) * PROGRESS_BAR_LENGTH);
 
   return (
