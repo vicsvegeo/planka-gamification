@@ -87,8 +87,6 @@ export default {
         'Jesteś pewien że chcesz usunąć tego zarządcę z projektu?',
       areYouSureYouWantToRemoveThisMemberFromBoard:
         'Jesteś pewien że chcesz usunąć tego członka z tablicy?',
-      areYouSureYouWantToUnlinkSsoFromThisUser:
-        'Czy na pewno chcesz odłączyć SSO od tego użytkownika? Pozwoli to użytkownikowi zalogować się przy użyciu hasła.',
       assignAsOwner_title: 'Przypisz jako właściciela',
       atLeastOneListMustBePresent: 'Przynajmniej jedna lista musi istnieć',
       attachment: 'Załącznik',
@@ -333,7 +331,6 @@ export default {
       turnOffRecentCardHighlighting: 'Wyłącz podświetlanie nowych kart',
       typeNameToConfirm: 'Wpisz nazwę aby potwierdzić.',
       typeTitleToConfirm: 'Wpisz tytuł aby potwierdzić.',
-      unlinkSso_title: 'Odłączanie SSO',
       unsavedChanges: 'Niezapisane zmiany',
       uploadFailedFileIsTooBig: 'Przesyłanie nie powiodło się: plik jest za duży.',
       uploadFailedNotEnoughStorageSpace: 'Przesyłanie nie powiodło się: za mało miejsca na dysku.',
@@ -502,8 +499,6 @@ export default {
       start: 'Start',
       stop: 'Stop',
       subscribe: 'Subskrybuj',
-      unlinkSso: 'Odłącz SSO',
-      unlinkSso_title: 'Odłącz SSO',
       unsubscribe: 'Odsubskrybuj',
       uploadNewAvatar: 'Wgraj nowy awatar',
       uploadNewImage: 'Wgraj nowy obraz',
