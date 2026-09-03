@@ -143,13 +143,8 @@ export default {
       discordUserId: 'Discord User ID',
       discordUserIdHelperText:
         'To find your Discord User ID: enable Developer Mode in Discord (User Settings → Advanced), then right-click your own profile and select "Copy User ID".',
-      discoverPlankaPro: '✨ More features for your boards: Discover PLANKA Pro',
       discoverPlankaPro_title: 'Discover PLANKA Pro',
-      dismissProBannerFor30Days: 'Dismiss for 30 days',
       upgradeTeamToPro_title: 'Upgrade Team to Pro',
-      proFeatureCalendar: '✨ Calendar View for your boards',
-      proFeatureRecurringCards: '✨ Recurring Cards',
-      proFeatureGuestRoles: '✨ Guest Roles & External Collaboration',
       date: 'Date',
       deactivateUser_title: 'Deactivate User',
       defaultCardType_title: 'Default Card Type',
