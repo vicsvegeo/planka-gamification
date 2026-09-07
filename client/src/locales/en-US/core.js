@@ -475,6 +475,7 @@ export default {
       changePassword: 'Change password',
       copy: 'Copy',
       copyAll: 'Copy all',
+      copyCardId: 'Copy card ID',
       copyCard_title: 'Copy Card',
       createApiKey: 'Create API key',
       createBoard: 'Create board',

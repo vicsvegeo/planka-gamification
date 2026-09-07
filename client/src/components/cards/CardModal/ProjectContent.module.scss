@@ -96,6 +96,21 @@
     }
   }
 
+  .copyIdButton {
+    background: transparent;
+    box-shadow: none;
+    color: #6b808c;
+    flex: 0 0 auto;
+    margin: 4px 0 0;
+    min-height: auto;
+    padding: 6px;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.08);
+      color: #17394d;
+    }
+  }
+
   .cursorPointer {
     cursor: pointer;
   }
@@ -187,11 +202,15 @@
   }
 
   .headerTitleWrapper {
+    flex: 1 1 auto;
     margin: 4px 0;
+    min-width: 0;
     padding: 6px 0 0;
   }
 
   .headerWrapper {
+    align-items: flex-start;
+    display: flex;
     margin: 12px 48px 12px 56px;
     position: relative;
   }

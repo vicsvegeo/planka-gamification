@@ -152,6 +152,7 @@ const ProjectContent = React.memo(() => {
   const [t] = useTranslation();
   const [descriptionDraft, setDescriptionDraft] = useState(null);
   const [isEditDescriptionOpened, setIsEditDescriptionOpened] = useState(false);
+  const [isCardIdCopied, setIsCardIdCopied] = useState(false);
   const [, , setIsClosableActive] = useContext(ClosableContext);
 
   const handleListSelect = useCallback(
@@ -268,6 +269,16 @@ const ProjectContent = React.memo(() => {
     );
   }, [card.isSubscribed, dispatch]);
 
+  const handleCopyIdClick = useCallback(() => {
+    if (isCardIdCopied) {
+      return;
+    }
+
+    navigator.clipboard.writeText(card.id);
+    setIsCardIdCopied(true);
+    setTimeout(() => setIsCardIdCopied(false), 1000);
+  }, [card.id, isCardIdCopied]);
+
   const handleEditDescriptionClick = useCallback((event) => {
     if (window.getSelection().toString() || isUsableMarkdownElement(event.target)) {
       return;
@@ -319,6 +330,13 @@ const ProjectContent = React.memo(() => {
                 <div className={styles.headerTitle}>{card.name}</div>
               )}
             </div>
+            <Button
+              className={styles.copyIdButton}
+              title={t('action.copyCardId')}
+              onClick={handleCopyIdClick}
+            >
+              <Icon fitted name={isCardIdCopied ? 'check' : 'copy outline'} size="small" />
+            </Button>
           </div>
         </Grid.Column>
       </Grid.Row>
