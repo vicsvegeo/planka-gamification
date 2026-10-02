@@ -44,8 +44,16 @@ const createGithubApp = ({ appId, privateKey, apiUrl, outgoingProxy }) => {
   const installationByRepo = new Map(); // repo -> { installationId, checkedAt }
 
   // Requests authenticated as the app itself (JWT).
-  const appClient = () =>
-    createGithubClient({ token: createAppJwt(appId, privateKey), apiUrl, outgoingProxy });
+  const appClient = () => {
+    let token;
+    try {
+      token = createAppJwt(appId, privateKey);
+    } catch (error) {
+      throw new GithubError(`The GitHub App private key is invalid (${error.message})`);
+    }
+
+    return createGithubClient({ token, apiUrl, outgoingProxy });
+  };
 
   const getInstallationToken = async (installationId) => {
     const cached = tokenCache.get(installationId);

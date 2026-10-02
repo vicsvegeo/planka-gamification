@@ -29,10 +29,23 @@ const envToBytes = (value) => bytes(value);
 
 const envToArray = (value) => (value ? value.split(',') : []);
 
+// A missing or unreadable key only disables the GitHub integration: it must never
+// stop Planka from starting.
 const readGithubAppPrivateKey = () => {
-  const value = process.env.GITHUB_APP_PRIVATE_KEY_FILE
-    ? fs.readFileSync(process.env.GITHUB_APP_PRIVATE_KEY_FILE, 'utf8')
-    : process.env.GITHUB_APP_PRIVATE_KEY;
+  let value = process.env.GITHUB_APP_PRIVATE_KEY;
+
+  if (process.env.GITHUB_APP_PRIVATE_KEY_FILE) {
+    try {
+      value = fs.readFileSync(process.env.GITHUB_APP_PRIVATE_KEY_FILE, 'utf8');
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `GitHub integration disabled: cannot read GITHUB_APP_PRIVATE_KEY_FILE (${error.message})`,
+      );
+
+      return undefined;
+    }
+  }
 
   return value ? value.replace(/\\n/g, '\n').trim() : undefined;
 };
