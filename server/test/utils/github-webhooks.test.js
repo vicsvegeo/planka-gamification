@@ -58,6 +58,73 @@ describe('github-webhooks', () => {
   });
 
   describe('#parseEvent()', () => {
+    it('a branch create on a card without a branch starts fresh', () => {
+      const event = parseEvent('create', {
+        ref: 'feat/BLAPP-42-x',
+        ref_type: 'branch',
+        repository: { full_name: 'o/r' },
+      });
+
+      expect(event.linkBranch).to.equal(true);
+      expect(
+        event.buildValues({ githubBranch: null, githubPrState: 'merged', githubPrNumber: 3 }),
+      ).to.deep.equal({
+        githubPrState: 'branch',
+        githubPrNumber: null,
+        githubPrUrl: null,
+        githubCiState: null,
+        githubCiUrl: null,
+        githubCiRuns: null,
+      });
+    });
+
+    it('a branch delete unlinks the branch and its CI, keeping a PR badge', () => {
+      const event = parseEvent('delete', {
+        ref: 'feat/BLAPP-42-x',
+        ref_type: 'branch',
+        repository: { full_name: 'o/r' },
+      });
+
+      expect(event.linkBranch).to.equal(false);
+      expect(
+        event.buildValues({ githubBranch: 'feat/BLAPP-42-x', githubPrState: 'branch' }),
+      ).to.deep.equal({
+        githubBranch: null,
+        githubCiState: null,
+        githubCiUrl: null,
+        githubCiRuns: null,
+        githubPrState: null,
+      });
+      expect(
+        event.buildValues({ githubBranch: 'feat/BLAPP-42-x', githubPrState: 'merged' }),
+      ).to.deep.equal({
+        githubBranch: null,
+        githubCiState: null,
+        githubCiUrl: null,
+        githubCiRuns: null,
+      });
+    });
+
+    it('ignores deleting another branch or a tag', () => {
+      const event = parseEvent('delete', {
+        ref: 'feat/BLAPP-42-old-name',
+        ref_type: 'branch',
+        repository: { full_name: 'o/r' },
+      });
+
+      expect(event.buildValues({ githubBranch: 'feat/BLAPP-42-x' })).to.equal(null);
+      expect(
+        parseEvent('delete', { ref: 'v1', ref_type: 'tag', repository: { full_name: 'o/r' } }),
+      ).to.equal(null);
+    });
+
+    it('only new PRs and branch creation may link a branch to a card', () => {
+      expect(prEvent('opened').linkBranch).to.equal(true);
+      expect(prEvent('reopened').linkBranch).to.equal(true);
+      expect(prEvent('closed', { state: 'closed' }).linkBranch).to.equal(false);
+      expect(prEvent('edited').linkBranch).to.equal(false);
+    });
+
     it('maps a branch create to "branch" only when there is no PR state yet', () => {
       const event = parseEvent('create', {
         ref: 'feat/BLAPP-42-x',
@@ -67,10 +134,14 @@ describe('github-webhooks', () => {
 
       expect(event.branch).to.equal('feat/BLAPP-42-x');
       expect(event.repo).to.equal('o/r');
-      expect(event.buildValues({ githubPrState: null })).to.deep.equal({
+      expect(
+        event.buildValues({ githubBranch: 'feat/BLAPP-42-x', githubPrState: null }),
+      ).to.deep.equal({
         githubPrState: 'branch',
       });
-      expect(event.buildValues({ githubPrState: 'open' })).to.equal(null);
+      expect(
+        event.buildValues({ githubBranch: 'feat/BLAPP-42-x', githubPrState: 'open' }),
+      ).to.equal(null);
     });
 
     it('ignores tag creation and unrelated events', () => {

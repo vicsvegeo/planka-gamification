@@ -39,7 +39,10 @@ const GithubBranch = React.memo(({ canCreate }) => {
     setTimeout(() => setIsCommandCopied(false), 1000);
   }, [card.githubBranch, isCommandCopied]);
 
-  if (!card.githubBranch && (!project.githubRepo || !canCreate)) {
+  const hasBadges = !!(card.githubPrState || card.githubCiState);
+  const canCreateBranch = !card.githubBranch && !!project.githubRepo && canCreate;
+
+  if (!card.githubBranch && !hasBadges && !canCreateBranch) {
     return null;
   }
 
@@ -47,46 +50,47 @@ const GithubBranch = React.memo(({ canCreate }) => {
     <div className={styles.wrapper}>
       <Icon name="github" className={styles.moduleIcon} />
       <div className={styles.moduleHeader}>{t('common.github')}</div>
-      {card.githubBranch ? (
-        <>
-          <div className={styles.row}>
-            {card.githubPrState && (
-              <GithubPrBadge
-                state={card.githubPrState}
-                prUrl={card.githubPrUrl}
-                prNumber={card.githubPrNumber}
-                repo={project.githubRepo}
-                branch={card.githubBranch}
-              />
-            )}
-            {card.githubCiState && (
-              <GithubCiBadge state={card.githubCiState} url={card.githubCiUrl} />
-            )}
-            {project.githubRepo && (
-              <Button
-                as="a"
-                href={buildGithubBranchUrl(project.githubRepo, card.githubBranch)}
-                target="_blank"
-                rel="noreferrer"
-                className={styles.actionButton}
-              >
-                <Icon name="external alternate" />
-                {t('action.openOnGithub')}
-              </Button>
-            )}
-          </div>
-          <div className={styles.branch}>
-            <code className={styles.branchName}>{card.githubBranch}</code>
+      {(hasBadges || card.githubBranch) && (
+        <div className={styles.row}>
+          {card.githubPrState && (
+            <GithubPrBadge
+              state={card.githubPrState}
+              prUrl={card.githubPrUrl}
+              prNumber={card.githubPrNumber}
+              repo={project.githubRepo}
+              branch={card.githubBranch}
+            />
+          )}
+          {card.githubCiState && (
+            <GithubCiBadge state={card.githubCiState} url={card.githubCiUrl} />
+          )}
+          {card.githubBranch && project.githubRepo && (
             <Button
-              className={styles.copyButton}
-              title={t('action.copyCheckoutCommand')}
-              onClick={handleCopyClick}
+              as="a"
+              href={buildGithubBranchUrl(project.githubRepo, card.githubBranch)}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.actionButton}
             >
-              <Icon fitted name={isCommandCopied ? 'check' : 'copy outline'} size="small" />
+              <Icon name="external alternate" />
+              {t('action.openOnGithub')}
             </Button>
-          </div>
-        </>
-      ) : (
+          )}
+        </div>
+      )}
+      {card.githubBranch && (
+        <div className={styles.branch}>
+          <code className={styles.branchName}>{card.githubBranch}</code>
+          <Button
+            className={styles.copyButton}
+            title={t('action.copyCheckoutCommand')}
+            onClick={handleCopyClick}
+          >
+            <Icon fitted name={isCommandCopied ? 'check' : 'copy outline'} size="small" />
+          </Button>
+        </div>
+      )}
+      {canCreateBranch && (
         <>
           <Button
             loading={card.isGithubBranchCreating}

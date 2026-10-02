@@ -8,7 +8,7 @@
  * /github/webhook:
  *   post:
  *     summary: Receive GitHub webhook
- *     description: Receives `create`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the card from the `BLAPP-<n>` key in the branch name, updates its PR state / CI badges and, when a PR is opened or reopened, syncs the card's Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
+ *     description: Receives `create`, `delete`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the card from the `BLAPP-<n>` key in the branch name, updates its PR state / CI badges and, when a PR is opened or reopened, syncs the card's Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
  *     tags:
  *       - GitHub
  *     operationId: receiveGithubWebhook
@@ -173,8 +173,9 @@ module.exports = {
     const values = event.buildValues(card);
 
     if (values) {
-      // Hand-made branches get linked to the card too.
-      if (!card.githubBranch) {
+      // Hand-made branches get linked to the card too, but only by events that
+      // start work on a branch (never by late events for a deleted one).
+      if (event.linkBranch && !card.githubBranch && values.githubBranch === undefined) {
         values.githubBranch = event.branch;
       }
 

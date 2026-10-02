@@ -48,9 +48,21 @@ const getPrState = (pullRequest) => {
   return pullRequest.merged ? PrStates.MERGED : PrStates.CLOSED;
 };
 
-// Turns a webhook delivery into { branch, repo, buildValues(card) }, or null
-// when the event is irrelevant. buildValues returns the card fields to update,
-// or null when the event must not change this card.
+// Everything that belongs to the card's previous branch.
+const BRANCH_WORK_RESET = {
+  githubPrState: PrStates.BRANCH,
+  githubPrNumber: null,
+  githubPrUrl: null,
+  githubCiState: null,
+  githubCiUrl: null,
+  githubCiRuns: null,
+};
+
+// Turns a webhook delivery into { branch, repo, linkBranch, buildValues(card) },
+// or null when the event is irrelevant. buildValues returns the card fields to
+// update, or null when the event must not change this card. linkBranch says the
+// event may link its branch to a card that has none (a new branch or PR), which
+// late events for a deleted branch must not do.
 const parseEvent = (eventName, payload) => {
   if (!payload || !payload.repository) {
     return null;
@@ -66,8 +78,44 @@ const parseEvent = (eventName, payload) => {
     return {
       branch: payload.ref,
       repo,
-      // A late branch event must never downgrade a PR state.
-      buildValues: (card) => (card.githubPrState ? null : { githubPrState: PrStates.BRANCH }),
+      linkBranch: true,
+      buildValues: (card) => {
+        // A new branch for a card without one starts fresh.
+        if (!card.githubBranch) {
+          return { ...BRANCH_WORK_RESET };
+        }
+
+        // A late branch event must never downgrade a PR state.
+        return card.githubPrState ? null : { githubPrState: PrStates.BRANCH };
+      },
+    };
+  }
+
+  if (eventName === 'delete') {
+    if (payload.ref_type !== 'branch') {
+      return null;
+    }
+
+    return {
+      branch: payload.ref,
+      repo,
+      linkBranch: false,
+      buildValues: (card) => {
+        if (card.githubBranch !== payload.ref) {
+          return null;
+        }
+
+        // The PR badge (merged / closed / open) stays: it still links to the PR.
+        return {
+          githubBranch: null,
+          githubCiState: null,
+          githubCiUrl: null,
+          githubCiRuns: null,
+          ...(card.githubPrState === PrStates.BRANCH && {
+            githubPrState: null,
+          }),
+        };
+      },
     };
   }
 
@@ -83,6 +131,7 @@ const parseEvent = (eventName, payload) => {
     return {
       branch: pullRequest.head.ref,
       repo,
+      linkBranch: isNewPr,
       // Opening (or reopening) a PR syncs the card context into its description.
       pullRequestToSync: isNewPr ? pullRequest : null,
       buildValues: (card) => {
@@ -111,6 +160,7 @@ const parseEvent = (eventName, payload) => {
     return {
       branch: workflowRun.head_branch,
       repo,
+      linkBranch: false,
       buildValues: (card) => buildCiValues(card, workflowRun),
     };
   }
@@ -120,6 +170,7 @@ const parseEvent = (eventName, payload) => {
 
 module.exports = {
   PrStates,
+  BRANCH_WORK_RESET,
   verifySignature,
   parseTicketNumber,
   parseEvent,

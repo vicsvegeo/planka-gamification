@@ -47,7 +47,7 @@
 const { idInput } = require('../../../utils/inputs');
 const { DEFAULT_BASE_BRANCH, buildBranchName } = require('../../../utils/github-branches');
 const { pickBranchType } = require('../../../utils/type-labels');
-const { PrStates } = require('../../../utils/github-webhooks');
+const { BRANCH_WORK_RESET } = require('../../../utils/github-webhooks');
 const { GithubError } = require('../../../utils/github-api');
 const { getGithubApp } = require('../../../utils/github-app');
 
@@ -162,10 +162,9 @@ module.exports = {
         id: card.id,
       },
       {
+        // A new branch starts fresh: no PR or CI from a previous (deleted) branch.
+        ...BRANCH_WORK_RESET,
         githubBranch: branch,
-        ...(!card.githubPrState && {
-          githubPrState: PrStates.BRANCH,
-        }),
       },
     );
 
@@ -177,7 +176,15 @@ module.exports = {
       `board:${updatedCard.boardId}`,
       'cardUpdate',
       {
-        item: _.pick(updatedCard, ['id', 'githubBranch', 'githubPrState']),
+        item: _.pick(updatedCard, [
+          'id',
+          'githubBranch',
+          'githubPrState',
+          'githubPrNumber',
+          'githubPrUrl',
+          'githubCiState',
+          'githubCiUrl',
+        ]),
       },
       this.req,
     );
