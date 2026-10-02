@@ -201,6 +201,14 @@
     word-wrap: break-word;
   }
 
+  .headerTicketKey {
+    flex: 0 0 auto;
+    font-size: 20px;
+    line-height: 24px;
+    margin: 4px 8px 4px 0;
+    padding: 6px 0 0;
+  }
+
   .headerTitleWrapper {
     flex: 1 1 auto;
     margin: 4px 0;

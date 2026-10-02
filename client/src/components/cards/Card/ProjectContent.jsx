@@ -18,6 +18,7 @@ import TaskList from './TaskList';
 import DueDateChip from '../DueDateChip';
 import StopwatchChip from '../StopwatchChip';
 import XpChip from '../XpChip';
+import TicketKey from '../TicketKey';
 import TimeAgo from '../../common/TimeAgo';
 import UserAvatar from '../../users/UserAvatar';
 import LabelChip from '../../labels/LabelChip';
@@ -149,7 +150,10 @@ const ProjectContent = React.memo(({ cardId }) => {
 
   return (
     <div className={styles.wrapper}>
-      <div className={classNames(styles.name, card.isClosed && styles.nameClosed)}>{card.name}</div>
+      <div className={classNames(styles.name, card.isClosed && styles.nameClosed)}>
+        <TicketKey ticketNumber={card.ticketNumber} />
+        {card.name}
+      </div>
       {coverUrl && (
         <div className={styles.coverWrapper}>
           <img src={coverUrl} alt="" className={styles.cover} />

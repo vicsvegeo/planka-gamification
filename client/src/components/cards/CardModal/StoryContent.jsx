@@ -36,6 +36,7 @@ import Attachments from '../../attachments/Attachments';
 import AddAttachmentStep from '../../attachments/AddAttachmentStep';
 import AddCustomFieldGroupStep from '../../custom-field-groups/AddCustomFieldGroupStep';
 import XpChip from '../XpChip';
+import TicketKey from '../TicketKey';
 import EditXpStep from '../EditXpStep';
 
 import styles from './StoryContent.module.scss';
@@ -306,6 +307,7 @@ const StoryContent = React.memo(() => {
               name={CardTypeIcons[CardTypes.STORY]}
               className={classNames(styles.moduleIcon, styles.moduleIconTitle)}
             />
+            <TicketKey ticketNumber={card.ticketNumber} className={styles.headerTicketKey} />
             <div className={styles.headerTitleWrapper}>
               {canEditName ? (
                 <NameField defaultValue={card.name} size="large" onUpdate={handleNameUpdate} />

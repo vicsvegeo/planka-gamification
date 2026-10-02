@@ -17,6 +17,7 @@ export default class extends BaseModel {
     id: attr(),
     type: attr(),
     position: attr(),
+    ticketNumber: attr(),
     name: attr(),
     description: attr(),
     dueDate: attr(),

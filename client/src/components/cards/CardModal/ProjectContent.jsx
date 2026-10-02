@@ -27,6 +27,7 @@ import MoreActionsStep from './MoreActionsStep';
 import DueDateChip from '../DueDateChip';
 import StopwatchChip from '../StopwatchChip';
 import XpChip from '../XpChip';
+import TicketKey from '../TicketKey';
 import SoftDueDateChip from '../SoftDueDateChip';
 import EditDueDateStep from '../EditDueDateStep';
 import EditStopwatchStep from '../EditStopwatchStep';
@@ -323,6 +324,7 @@ const ProjectContent = React.memo(() => {
         <Grid.Column width={16} className={styles.headerPadding}>
           <div className={styles.headerWrapper}>
             <Icon name={CardTypeIcons[CardTypes.PROJECT]} className={styles.moduleIcon} />
+            <TicketKey ticketNumber={card.ticketNumber} className={styles.headerTicketKey} />
             <div className={styles.headerTitleWrapper}>
               {canEditName ? (
                 <NameField defaultValue={card.name} onUpdate={handleNameUpdate} />

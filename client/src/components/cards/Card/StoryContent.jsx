@@ -14,6 +14,7 @@ import markdownToText from '../../../utils/markdown-to-text';
 import { BoardViews } from '../../../constants/Enums';
 import TimeAgo from '../../common/TimeAgo';
 import XpChip from '../XpChip';
+import TicketKey from '../TicketKey';
 import LabelChip from '../../labels/LabelChip';
 import CustomFieldValueChip from '../../custom-field-values/CustomFieldValueChip';
 
@@ -103,6 +104,7 @@ const StoryContent = React.memo(({ cardId }) => {
           </span>
         )}
         <div className={classNames(styles.name, card.isClosed && styles.nameClosed)}>
+          <TicketKey ticketNumber={card.ticketNumber} />
           {card.name}
         </div>
         {card.description && <div className={styles.descriptionText}>{descriptionText}</div>}

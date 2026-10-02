@@ -73,6 +73,10 @@
  *           nullable: true
  *           description: Position of the card within the list
  *           example: 65536
+ *         ticketNumber:
+ *           type: integer
+ *           description: Instance-wide sequential number shown as the ticket key (e.g. BLAPP-42)
+ *           example: 42
  *         name:
  *           type: string
  *           description: Name/title of the card
@@ -212,6 +216,12 @@ module.exports = {
     listChangedAt: {
       type: 'ref',
       columnName: 'list_changed_at',
+    },
+    // Assigned by a database trigger on insert, never set by the app.
+    ticketNumber: {
+      type: 'number',
+      allowNull: true,
+      columnName: 'ticket_number',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

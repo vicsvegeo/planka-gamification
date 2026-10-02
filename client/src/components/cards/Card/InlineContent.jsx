@@ -12,6 +12,7 @@ import { Icon } from 'semantic-ui-react';
 import selectors from '../../../selectors';
 import markdownToText from '../../../utils/markdown-to-text';
 import { BoardViews } from '../../../constants/Enums';
+import TicketKey from '../TicketKey';
 import UserAvatar from '../../users/UserAvatar';
 import LabelChip from '../../labels/LabelChip';
 
@@ -90,7 +91,10 @@ const InlineContent = React.memo(({ cardId }) => {
       <span
         className={classNames(styles.attachments, styles.name, card.isClosed && styles.nameClosed)}
       >
-        <div className={styles.hidable}>{card.name}</div>
+        <div className={styles.hidable}>
+          <TicketKey ticketNumber={card.ticketNumber} />
+          {card.name}
+        </div>
       </span>
       {descriptionText && (
         <span className={classNames(styles.attachments, styles.descriptionText, styles.hidable)}>
