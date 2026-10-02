@@ -490,7 +490,6 @@ export default {
       changePassword: 'Change password',
       copy: 'Copy',
       copyAll: 'Copy all',
-      copyCardId: 'Copy card ID',
       copyCheckoutCommand: 'Copy checkout command',
       copyCard_title: 'Copy Card',
       createApiKey: 'Create API key',

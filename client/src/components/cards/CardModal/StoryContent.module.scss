@@ -90,21 +90,6 @@
     }
   }
 
-  .copyIdButton {
-    background: transparent;
-    box-shadow: none;
-    color: #6b808c;
-    flex: 0 0 auto;
-    margin: 4px 0 0;
-    min-height: auto;
-    padding: 6px;
-
-    &:hover {
-      background: rgba(9, 30, 66, 0.08);
-      color: #17394d;
-    }
-  }
-
   .cover {
     border-radius: 3px;
     cursor: pointer;
