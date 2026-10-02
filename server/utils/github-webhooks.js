@@ -6,6 +6,7 @@
 const crypto = require('crypto');
 
 const { TICKET_KEY_PREFIX } = require('./ticket-keys');
+const { buildCiValues } = require('./github-ci');
 
 const PrStates = {
   BRANCH: 'branch',
@@ -95,6 +96,20 @@ const parseEvent = (eventName, payload) => {
           githubPrUrl: pullRequest.html_url,
         };
       },
+    };
+  }
+
+  if (eventName === 'workflow_run') {
+    const workflowRun = payload.workflow_run;
+
+    if (!workflowRun || !workflowRun.head_branch) {
+      return null;
+    }
+
+    return {
+      branch: workflowRun.head_branch,
+      repo,
+      buildValues: (card) => buildCiValues(card, workflowRun),
     };
   }
 

@@ -103,6 +103,28 @@ describe('github-webhooks', () => {
       });
     });
 
+    it('maps workflow runs to the CI state of the head branch', () => {
+      const event = parseEvent('workflow_run', {
+        action: 'completed',
+        repository: { full_name: 'o/r' },
+        workflow_run: {
+          workflow_id: 1,
+          name: 'CI',
+          head_branch: 'fix/BLAPP-3-x',
+          head_sha: 'abc',
+          status: 'completed',
+          conclusion: 'success',
+          html_url: 'https://github.com/o/r/actions/runs/1',
+          run_started_at: '2026-10-02T10:00:00Z',
+        },
+      });
+
+      expect(event.branch).to.equal('fix/BLAPP-3-x');
+      const values = event.buildValues({});
+      expect(values.githubCiState).to.equal('passed');
+      expect(values.githubCiUrl).to.equal('https://github.com/o/r/actions/runs/1');
+    });
+
     it('does not let an old PR overwrite the tracked one', () => {
       const tracked = { githubPrState: 'open', githubPrNumber: 9 };
 

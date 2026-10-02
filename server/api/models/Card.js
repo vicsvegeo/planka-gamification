@@ -161,6 +161,17 @@
  *           nullable: true
  *           description: Link to the GitHub pull request
  *           example: https://github.com/octocat/hello-world/pull/12
+ *         githubCiState:
+ *           type: string
+ *           enum: [running, passed, failed]
+ *           nullable: true
+ *           description: Combined state of the CI workflow runs for the latest commit on the card's branch
+ *           example: passed
+ *         githubCiUrl:
+ *           type: string
+ *           nullable: true
+ *           description: Link to the most relevant CI workflow run
+ *           example: https://github.com/octocat/hello-world/actions/runs/1
  *         listChangedAt:
  *           type: string
  *           format: date-time
@@ -182,6 +193,7 @@
  */
 
 const { PrStates } = require('../../utils/github-webhooks');
+const { CiStates } = require('../../utils/github-ci');
 
 const Types = {
   PROJECT: 'project',
@@ -191,6 +203,7 @@ const Types = {
 module.exports = {
   Types,
   PrStates,
+  CiStates,
 
   attributes: {
     //  ╔═╗╦═╗╦╔╦╗╦╔╦╗╦╦  ╦╔═╗╔═╗
@@ -267,6 +280,22 @@ module.exports = {
       type: 'string',
       allowNull: true,
       columnName: 'github_pr_url',
+    },
+    githubCiState: {
+      type: 'string',
+      isIn: Object.values(CiStates),
+      allowNull: true,
+      columnName: 'github_ci_state',
+    },
+    githubCiUrl: {
+      type: 'string',
+      allowNull: true,
+      columnName: 'github_ci_url',
+    },
+    // Internal: per-workflow runs of the latest commit that githubCiState combines.
+    githubCiRuns: {
+      type: 'json',
+      columnName: 'github_ci_runs',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

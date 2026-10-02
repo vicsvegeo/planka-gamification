@@ -13,6 +13,7 @@ import selectors from '../../../../selectors';
 import entryActions from '../../../../entry-actions';
 import buildGithubBranchUrl from '../../../../utils/build-github-branch-url';
 import GithubPrBadge from '../../GithubPrBadge';
+import GithubCiBadge from '../../GithubCiBadge';
 
 import styles from './GithubBranch.module.scss';
 
@@ -46,15 +47,20 @@ const GithubBranch = React.memo(({ canCreate }) => {
     <div className={styles.wrapper}>
       <Icon name="github" className={styles.moduleIcon} />
       <div className={styles.moduleHeader}>{t('common.github')}</div>
-      {card.githubPrState && (
-        <div className={styles.badge}>
-          <GithubPrBadge
-            state={card.githubPrState}
-            prUrl={card.githubPrUrl}
-            prNumber={card.githubPrNumber}
-            repo={board.githubRepo}
-            branch={card.githubBranch}
-          />
+      {(card.githubPrState || card.githubCiState) && (
+        <div className={styles.badges}>
+          {card.githubPrState && (
+            <GithubPrBadge
+              state={card.githubPrState}
+              prUrl={card.githubPrUrl}
+              prNumber={card.githubPrNumber}
+              repo={board.githubRepo}
+              branch={card.githubBranch}
+            />
+          )}
+          {card.githubCiState && (
+            <GithubCiBadge state={card.githubCiState} url={card.githubCiUrl} />
+          )}
         </div>
       )}
       {card.githubBranch ? (

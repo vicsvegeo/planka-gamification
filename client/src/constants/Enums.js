@@ -130,3 +130,10 @@ export const GithubPrStates = {
   MERGED: 'merged',
   CLOSED: 'closed',
 };
+
+// Keep in sync with CiStates in server/utils/github-ci.js.
+export const GithubCiStates = {
+  RUNNING: 'running',
+  PASSED: 'passed',
+  FAILED: 'failed',
+};

@@ -78,6 +78,12 @@ export default class extends BaseModel {
     githubPrUrl: attr({
       getDefault: () => null,
     }),
+    githubCiState: attr({
+      getDefault: () => null,
+    }),
+    githubCiUrl: attr({
+      getDefault: () => null,
+    }),
     isGithubBranchCreating: attr({
       getDefault: () => false,
     }),

@@ -4,7 +4,10 @@
  */
 
 :global(#app) {
-  .badge {
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     margin-bottom: 8px;
   }
 

@@ -16,6 +16,7 @@ import TimeAgo from '../../common/TimeAgo';
 import XpChip from '../XpChip';
 import TicketKey from '../TicketKey';
 import GithubPrBadge from '../GithubPrBadge';
+import GithubCiBadge from '../GithubCiBadge';
 import LabelChip from '../../labels/LabelChip';
 import CustomFieldValueChip from '../../custom-field-values/CustomFieldValueChip';
 
@@ -130,6 +131,11 @@ const StoryContent = React.memo(({ cardId }) => {
                 repo={githubRepo}
                 branch={card.githubBranch}
               />
+            </span>
+          )}
+          {card.githubCiState && (
+            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+              <GithubCiBadge state={card.githubCiState} url={card.githubCiUrl} />
             </span>
           )}
           {listName && (

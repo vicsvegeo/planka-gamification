@@ -20,6 +20,7 @@ import StopwatchChip from '../StopwatchChip';
 import XpChip from '../XpChip';
 import TicketKey from '../TicketKey';
 import GithubPrBadge from '../GithubPrBadge';
+import GithubCiBadge from '../GithubCiBadge';
 import TimeAgo from '../../common/TimeAgo';
 import UserAvatar from '../../users/UserAvatar';
 import LabelChip from '../../labels/LabelChip';
@@ -206,6 +207,11 @@ const ProjectContent = React.memo(({ cardId }) => {
               repo={githubRepo}
               branch={card.githubBranch}
             />
+          </span>
+        )}
+        {card.githubCiState && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <GithubCiBadge state={card.githubCiState} url={card.githubCiUrl} />
           </span>
         )}
         {card.dueDate && (
