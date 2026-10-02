@@ -9,6 +9,10 @@ import http from './http';
 
 const getGithubRepositories = (headers) => http.get('/github/repositories', undefined, headers);
 
+const getGithubBranches = (repo, headers) =>
+  http.get(`/github/branches?repo=${encodeURIComponent(repo)}`, undefined, headers);
+
 export default {
   getGithubRepositories,
+  getGithubBranches,
 };

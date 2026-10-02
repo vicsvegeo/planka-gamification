@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { expect } = require('chai');
 
-const { createAppJwt } = require('../../utils/github-app');
+const { createAppJwt, createGithubApp } = require('../../utils/github-app');
 
 const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
   modulusLength: 2048,
@@ -37,6 +37,70 @@ describe('github-app', () => {
         .verify(publicKey, Buffer.from(signature, 'base64url'));
 
       expect(isValid).to.equal(true);
+    });
+  });
+
+  describe('#listBranches()', () => {
+    const originalFetch = global.fetch;
+    let branchPages;
+    let branchesStatus;
+
+    const respond = (status, body) => ({ status, json: async () => body });
+
+    beforeEach(() => {
+      branchPages = [];
+      branchesStatus = 200;
+
+      global.fetch = async (url) => {
+        const { pathname, searchParams } = new URL(url);
+
+        if (pathname === '/repos/octo/app/installation') {
+          return respond(200, { id: 7 });
+        }
+
+        if (pathname === '/app/installations/7/access_tokens') {
+          return respond(201, { token: 'token', expires_at: '2999-01-01T00:00:00Z' });
+        }
+
+        if (pathname === '/repos/octo/app/branches') {
+          const page = Number(searchParams.get('page'));
+
+          return respond(branchesStatus, branchPages[page - 1] || []);
+        }
+
+        return respond(404, null);
+      };
+    });
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    const createApp = () =>
+      createGithubApp({ appId: 1, privateKey, apiUrl: 'https://api.github.test' });
+
+    it('collects branch names across pages', async () => {
+      branchPages = [
+        Array.from({ length: 100 }, (_, index) => ({ name: `branch-${index}` })),
+        [{ name: 'main' }],
+      ];
+
+      const branches = await createApp().listBranches('octo/app');
+
+      expect(branches).to.have.length(101);
+      expect(branches[100]).to.equal('main');
+    });
+
+    it('fails with a GithubError when GitHub refuses', async () => {
+      branchesStatus = 403;
+
+      try {
+        await createApp().listBranches('octo/app');
+        expect.fail('should have thrown');
+      } catch (error) {
+        expect(error.name).to.equal('GithubError');
+        expect(error.status).to.equal(403);
+      }
     });
   });
 });

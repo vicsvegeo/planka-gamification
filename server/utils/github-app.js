@@ -18,6 +18,8 @@ const TOKEN_REFRESH_MARGIN = 5 * 60 * 1000;
 const INSTALLATION_CACHE_TTL = 10 * 60 * 1000;
 const REPOSITORIES_PER_PAGE = 100;
 const MAX_REPOSITORY_PAGES = 10;
+const BRANCHES_PER_PAGE = 100;
+const MAX_BRANCH_PAGES = 10;
 
 const base64Url = (value) => Buffer.from(value).toString('base64url');
 
@@ -184,7 +186,40 @@ const createGithubApp = ({ appId, privateKey, apiUrl, outgoingProxy }) => {
     return repositories;
   };
 
-  return { clientForRepo, listRepositories };
+  // Branch names of `repo`, as returned by GitHub.
+  const listBranches = async (repo) => {
+    const client = await clientForRepo(repo);
+    const branches = [];
+
+    for (let page = 1; page <= MAX_BRANCH_PAGES; page += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const response = await client.request(
+        'GET',
+        `/repos/${repo}/branches?per_page=${BRANCHES_PER_PAGE}&page=${page}`,
+      );
+
+      if (response.status !== 200 || !Array.isArray(response.body)) {
+        throw new GithubError(
+          response.status === 404
+            ? `Repository ${repo} not found, or the GitHub App is not installed on it`
+            : `Could not list branches of ${repo} (GitHub status ${response.status})`,
+          response.status,
+        );
+      }
+
+      response.body.forEach(({ name }) => {
+        branches.push(name);
+      });
+
+      if (response.body.length < BRANCHES_PER_PAGE) {
+        break;
+      }
+    }
+
+    return branches;
+  };
+
+  return { clientForRepo, listRepositories, listBranches };
 };
 
 // One app instance per process, so tokens are cached across requests. Returns
