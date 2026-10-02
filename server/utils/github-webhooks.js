@@ -83,6 +83,8 @@ const parseEvent = (eventName, payload) => {
     return {
       branch: pullRequest.head.ref,
       repo,
+      // Opening (or reopening) a PR syncs the card context into its description.
+      pullRequestToSync: isNewPr ? pullRequest : null,
       buildValues: (card) => {
         // Only a newly (re)opened PR may take over tracking from another one, so a
         // late event for an old PR can't overwrite the state of the current one.

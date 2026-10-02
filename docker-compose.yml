@@ -72,7 +72,7 @@ services:
       # Set to true to expose the Swagger specification at /swagger.json
       # - SWAGGER_EXPOSED=false
 
-      # GitHub integration ("Create branch" on cards): fine-grained PAT with Contents: read and write
+      # GitHub integration: fine-grained PAT with Contents + Pull requests: read and write
       # - GITHUB_TOKEN=
       # Secret of the repository webhook pointing at <BASE_URL>/api/github/webhook
       # - GITHUB_WEBHOOK_SECRET=

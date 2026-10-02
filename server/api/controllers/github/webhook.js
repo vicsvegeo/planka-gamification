@@ -8,7 +8,7 @@
  * /github/webhook:
  *   post:
  *     summary: Receive GitHub webhook
- *     description: Receives `create` and `pull_request` deliveries from a GitHub repository webhook, finds the card from the `BLAPP-<n>` key in the branch name and updates its PR state badge. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
+ *     description: Receives `create`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the card from the `BLAPP-<n>` key in the branch name, updates its PR state / CI badges and, when a PR is opened or reopened, syncs the card's Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
  *     tags:
  *       - GitHub
  *     operationId: receiveGithubWebhook
@@ -27,6 +27,9 @@ const {
   parseTicketNumber,
   parseEvent,
 } = require('../../../utils/github-webhooks');
+const { GithubError, createGithubClient } = require('../../../utils/github-api');
+const { buildBlock, mergeIntoBody } = require('../../../utils/card-context');
+const { formatTicketKey } = require('../../../utils/ticket-keys');
 
 const Errors = {
   NOT_CONFIGURED: {
@@ -35,6 +38,52 @@ const Errors = {
   INVALID_SIGNATURE: {
     invalidSignature: 'Invalid signature',
   },
+};
+
+// Puts the card's Why / Done when into the PR description (between markers,
+// so a re-sync replaces it). Never fails the delivery: problems are reported in
+// the result instead.
+const syncPullRequestDescription = async (card, repo, pullRequest) => {
+  const { githubToken, githubApiUrl, outgoingProxy, baseUrl } = sails.config.custom;
+
+  if (!githubToken) {
+    return 'description not synced: GITHUB_TOKEN is missing';
+  }
+
+  const block = buildBlock({
+    ticketKey: formatTicketKey(card.ticketNumber),
+    cardName: card.name,
+    cardUrl: `${baseUrl.replace(/\/+$/, '')}/cards/${card.id}`,
+    description: card.description,
+  });
+
+  const body = mergeIntoBody(pullRequest.body, block);
+
+  if (body === pullRequest.body) {
+    return 'description already up to date';
+  }
+
+  const github = createGithubClient({
+    token: githubToken,
+    apiUrl: githubApiUrl,
+    outgoingProxy,
+  });
+
+  try {
+    await github.updatePullRequestBody({
+      repo,
+      number: pullRequest.number,
+      body,
+    });
+  } catch (error) {
+    if (error instanceof GithubError) {
+      return `description not synced: ${error.message}`;
+    }
+
+    throw error;
+  }
+
+  return `synced card context into PR #${pullRequest.number}`;
 };
 
 // GitHub can deliver either JSON or form-encoded payloads.
@@ -121,41 +170,44 @@ module.exports = {
       };
     }
 
+    const results = [];
     const values = event.buildValues(card);
 
-    if (!values) {
-      return {
-        result: 'ignored: event does not change the card',
-      };
+    if (values) {
+      // Hand-made branches get linked to the card too.
+      if (!card.githubBranch) {
+        values.githubBranch = event.branch;
+      }
+
+      const { card: updatedCard } = await Card.qm.updateOne(
+        {
+          id: card.id,
+        },
+        values,
+      );
+
+      if (!updatedCard) {
+        return {
+          result: 'ignored: card was deleted',
+        };
+      }
+
+      sails.sockets.broadcast(`board:${updatedCard.boardId}`, 'cardUpdate', {
+        item: {
+          id: updatedCard.id,
+          ...values,
+        },
+      });
+
+      results.push(`updated card ${updatedCard.id}`);
     }
 
-    // Hand-made branches get linked to the card too.
-    if (!card.githubBranch) {
-      values.githubBranch = event.branch;
+    if (event.pullRequestToSync) {
+      results.push(await syncPullRequestDescription(card, event.repo, event.pullRequestToSync));
     }
-
-    const { card: updatedCard } = await Card.qm.updateOne(
-      {
-        id: card.id,
-      },
-      values,
-    );
-
-    if (!updatedCard) {
-      return {
-        result: 'ignored: card was deleted',
-      };
-    }
-
-    sails.sockets.broadcast(`board:${updatedCard.boardId}`, 'cardUpdate', {
-      item: {
-        id: updatedCard.id,
-        ...values,
-      },
-    });
 
     return {
-      result: `updated card ${updatedCard.id}`,
+      result: results.length > 0 ? results.join('; ') : 'ignored: event does not change the card',
     };
   },
 };

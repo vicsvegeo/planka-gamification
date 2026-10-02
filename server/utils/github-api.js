@@ -105,7 +105,24 @@ const createGithubClient = ({ token, apiUrl, outgoingProxy }) => {
     throw new GithubError(describeFailure(created.status, repo), created.status);
   };
 
-  return { request, ensureBranch };
+  const updatePullRequestBody = async ({ repo, number, body }) => {
+    const updated = await request('PATCH', `/repos/${repo}/pulls/${number}`, { body });
+
+    if (updated.status === 200) {
+      return;
+    }
+
+    if (updated.status === 403) {
+      throw new GithubError(
+        `The GitHub token is not allowed to edit pull requests in ${repo} (needs Pull requests: read and write)`,
+        403,
+      );
+    }
+
+    throw new GithubError(describeFailure(updated.status, repo), updated.status);
+  };
+
+  return { request, ensureBranch, updatePullRequestBody };
 };
 
 module.exports = {
