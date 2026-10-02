@@ -89,6 +89,11 @@ module.exports.custom = {
   botServiceUrl: process.env.BOT_SERVICE_URL,
   botServiceSecret: process.env.BOT_SERVICE_SECRET,
 
+  // Fork addition — GitHub integration (ticket branches). A fine-grained PAT
+  // limited to the board repositories; the API URL is overridable for tests.
+  githubToken: process.env.GITHUB_TOKEN,
+  githubApiUrl: (process.env.GITHUB_API_URL || 'https://api.github.com').replace(/\/+$/, ''),
+
   s3Endpoint: process.env.S3_ENDPOINT,
   s3Region: process.env.S3_REGION,
   s3AccessKeyId: process.env.S3_ACCESS_KEY_ID,

@@ -150,6 +150,13 @@ const duplicateCurrentCard = (data = {}) => ({
   },
 });
 
+const createCardGithubBranch = (id) => ({
+  type: EntryActionTypes.CARD_GITHUB_BRANCH_CREATE,
+  payload: {
+    id,
+  },
+});
+
 const copyCard = (id) => ({
   type: EntryActionTypes.CARD_COPY,
   payload: {
@@ -226,6 +233,7 @@ export default {
   transferCard,
   transferCurrentCard,
   duplicateCard,
+  createCardGithubBranch,
   duplicateCurrentCard,
   copyCard,
   cutCard,

@@ -67,6 +67,9 @@ export default function* cardsWatchers() {
     takeEvery(EntryActionTypes.CURRENT_CARD_DUPLICATE, ({ payload: { data } }) =>
       services.duplicateCurrentCard(data),
     ),
+    takeEvery(EntryActionTypes.CARD_GITHUB_BRANCH_CREATE, ({ payload: { id } }) =>
+      services.createCardGithubBranch(id),
+    ),
     takeEvery(EntryActionTypes.CARD_COPY, ({ payload: { id } }) => services.copyCard(id)),
     takeEvery(EntryActionTypes.CARD_CUT, ({ payload: { id } }) => services.cutCard(id)),
     takeEvery(EntryActionTypes.CARD_PASTE, ({ payload: { listId } }) => services.pasteCard(listId)),

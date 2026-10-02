@@ -66,6 +66,15 @@ export default class extends BaseModel {
     snoozedUntil: attr({
       getDefault: () => null,
     }),
+    githubBranch: attr({
+      getDefault: () => null,
+    }),
+    isGithubBranchCreating: attr({
+      getDefault: () => false,
+    }),
+    githubBranchError: attr({
+      getDefault: () => null,
+    }),
     boardId: fk({
       to: 'Board',
       as: 'board',
@@ -306,6 +315,32 @@ export default class extends BaseModel {
         Card.upsert(payload.card);
 
         break;
+      case ActionTypes.CARD_GITHUB_BRANCH_CREATE:
+        Card.withId(payload.id).update({
+          isGithubBranchCreating: true,
+          githubBranchError: null,
+        });
+
+        break;
+      case ActionTypes.CARD_GITHUB_BRANCH_CREATE__SUCCESS:
+        Card.upsert({
+          ...payload.card,
+          isGithubBranchCreating: false,
+        });
+
+        break;
+      case ActionTypes.CARD_GITHUB_BRANCH_CREATE__FAILURE: {
+        const cardModel = Card.withId(payload.id);
+
+        if (cardModel) {
+          cardModel.update({
+            isGithubBranchCreating: false,
+            githubBranchError: payload.error.message || 'Could not create the branch',
+          });
+        }
+
+        break;
+      }
       case ActionTypes.CARD_CREATE__SUCCESS:
         Card.withId(payload.localId).deleteWithClearable();
         Card.upsert(payload.card);

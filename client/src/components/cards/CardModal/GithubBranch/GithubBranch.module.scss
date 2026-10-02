@@ -1,0 +1,81 @@
+/*!
+ * Copyright (c) 2024 PLANKA Software GmbH
+ * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
+ */
+
+:global(#app) {
+  .actionButton {
+    background: rgba(9, 30, 66, 0.04);
+    box-shadow: none;
+    color: #17394d;
+    font-weight: normal;
+    margin: 0;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.08);
+    }
+  }
+
+  .branch {
+    align-items: center;
+    display: flex;
+    margin-bottom: 8px;
+  }
+
+  .branchName {
+    background: rgba(9, 30, 66, 0.06);
+    border-radius: 3px;
+    color: #17394d;
+    font-size: 13px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 4px 8px;
+  }
+
+  .copyButton {
+    background: transparent;
+    box-shadow: none;
+    color: #6b808c;
+    flex: 0 0 auto;
+    margin: 0 0 0 4px;
+    min-height: auto;
+    padding: 6px;
+
+    &:hover {
+      background: rgba(9, 30, 66, 0.08);
+      color: #17394d;
+    }
+  }
+
+  .error {
+    color: #db2828;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  .moduleHeader {
+    color: #17394d;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1.5;
+    margin: 0 0 4px;
+    padding: 6px 0;
+  }
+
+  .moduleIcon {
+    color: #17394d;
+    font-size: 17px;
+    height: 32px;
+    left: -40px;
+    line-height: 32px;
+    margin-right: 0;
+    position: absolute;
+    top: 2px;
+    width: 32px;
+  }
+
+  .wrapper {
+    margin: 0 0 24px 40px;
+    position: relative;
+  }
+}

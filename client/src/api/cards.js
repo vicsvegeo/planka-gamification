@@ -88,6 +88,12 @@ const updateCard = (id, data, headers) =>
     item: transformCard(body.item),
   }));
 
+const createCardGithubBranch = (id, headers) =>
+  socket.post(`/cards/${id}/github-branch`, undefined, headers).then((body) => ({
+    ...body,
+    item: transformCard(body.item),
+  }));
+
 const duplicateCard = (id, data, headers) =>
   socket.post(`/cards/${id}/duplicate`, data, headers).then((body) => ({
     ...body,
@@ -144,6 +150,7 @@ export default {
   getCard,
   updateCard,
   duplicateCard,
+  createCardGithubBranch,
   readCardNotifications,
   deleteCard,
   makeHandleCardsUpdate,

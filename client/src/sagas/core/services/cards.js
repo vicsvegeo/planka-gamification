@@ -625,6 +625,20 @@ export function* duplicateCurrentCard(data) {
   yield call(duplicateCard, cardId, data);
 }
 
+export function* createCardGithubBranch(id) {
+  yield put(actions.createCardGithubBranch(id));
+
+  let card;
+  try {
+    ({ item: card } = yield call(request, api.createCardGithubBranch, id));
+  } catch (error) {
+    yield put(actions.createCardGithubBranch.failure(id, error));
+    return;
+  }
+
+  yield put(actions.createCardGithubBranch.success(card));
+}
+
 export function* copyCard(id) {
   yield put(actions.copyCard(id));
 }
@@ -774,6 +788,7 @@ export default {
   transferCurrentCard,
   duplicateCard,
   duplicateCurrentCard,
+  createCardGithubBranch,
   copyCard,
   cutCard,
   pasteCard,

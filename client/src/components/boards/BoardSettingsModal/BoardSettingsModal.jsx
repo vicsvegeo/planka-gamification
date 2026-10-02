@@ -14,6 +14,7 @@ import { useClosableModal } from '../../../hooks';
 import GeneralPane from './GeneralPane';
 import PreferencesPane from './PreferencesPane';
 import NotificationsPane from './NotificationsPane';
+import GithubPane from './GithubPane';
 
 const BoardSettingsModal = React.memo(() => {
   const openPreferences = useSelector(
@@ -47,6 +48,10 @@ const BoardSettingsModal = React.memo(() => {
         context: 'title',
       }),
       render: () => <NotificationsPane />,
+    },
+    {
+      menuItem: t('common.github'),
+      render: () => <GithubPane />,
     },
   ];
 

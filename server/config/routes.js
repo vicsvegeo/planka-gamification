@@ -196,6 +196,7 @@ module.exports.routes = {
   'GET /api/cards/:id': 'cards/show',
   'PATCH /api/cards/:id': 'cards/update',
   'POST /api/cards/:id/duplicate': 'cards/duplicate',
+  'POST /api/cards/:id/github-branch': 'cards/create-github-branch',
   'POST /api/cards/:id/read-notifications': 'cards/read-notifications',
   'DELETE /api/cards/:id': 'cards/delete',
   'POST /api/cards/:cardId/card-memberships': 'card-memberships/create',

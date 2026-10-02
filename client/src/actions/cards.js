@@ -270,6 +270,28 @@ duplicateCard.failure = (localId, error) => ({
   },
 });
 
+const createCardGithubBranch = (id) => ({
+  type: ActionTypes.CARD_GITHUB_BRANCH_CREATE,
+  payload: {
+    id,
+  },
+});
+
+createCardGithubBranch.success = (card) => ({
+  type: ActionTypes.CARD_GITHUB_BRANCH_CREATE__SUCCESS,
+  payload: {
+    card,
+  },
+});
+
+createCardGithubBranch.failure = (id, error) => ({
+  type: ActionTypes.CARD_GITHUB_BRANCH_CREATE__FAILURE,
+  payload: {
+    id,
+    error,
+  },
+});
+
 const copyCard = (id) => ({
   type: ActionTypes.CARD_COPY,
   payload: {
@@ -327,6 +349,7 @@ export default {
   handleCardUpdate,
   transferCard,
   duplicateCard,
+  createCardGithubBranch,
   copyCard,
   cutCard,
   pasteCard,

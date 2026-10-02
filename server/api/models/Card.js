@@ -140,6 +140,11 @@
  *           nullable: true
  *           description: Whether the on-time bonus XP has already been awarded for this card (gamification)
  *           example: false
+ *         githubBranch:
+ *           type: string
+ *           nullable: true
+ *           description: Name of the GitHub branch created for this card
+ *           example: feat/BLAPP-42-implement-user-authentication
  *         listChangedAt:
  *           type: string
  *           format: date-time
@@ -222,6 +227,11 @@ module.exports = {
       type: 'number',
       allowNull: true,
       columnName: 'ticket_number',
+    },
+    githubBranch: {
+      type: 'string',
+      allowNull: true,
+      columnName: 'github_branch',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
