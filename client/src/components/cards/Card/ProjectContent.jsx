@@ -19,6 +19,7 @@ import DueDateChip from '../DueDateChip';
 import StopwatchChip from '../StopwatchChip';
 import XpChip from '../XpChip';
 import TicketKey from '../TicketKey';
+import GithubPrBadge from '../GithubPrBadge';
 import TimeAgo from '../../common/TimeAgo';
 import UserAvatar from '../../users/UserAvatar';
 import LabelChip from '../../labels/LabelChip';
@@ -78,13 +79,14 @@ const ProjectContent = React.memo(({ cardId }) => {
     return attachment && attachment.data.thumbnailUrls.outside360;
   });
 
-  const { listName, withCreator, withAge } = useSelector((state) => {
+  const { listName, withCreator, withAge, githubRepo } = useSelector((state) => {
     const board = selectors.selectCurrentBoard(state);
 
     return {
       listName: list.name && (board.view === BoardViews.KANBAN ? null : list.name),
       withCreator: board.alwaysDisplayCardCreator,
       withAge: board.displayCardAges,
+      githubRepo: board.githubRepo,
     };
   }, shallowEqual);
 
@@ -195,6 +197,17 @@ const ProjectContent = React.memo(({ cardId }) => {
         <span className={classNames(styles.attachment, styles.attachmentLeft)}>
           <XpChip value={card.baseXp} />
         </span>
+        {card.githubPrState && (
+          <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+            <GithubPrBadge
+              state={card.githubPrState}
+              prUrl={card.githubPrUrl}
+              prNumber={card.githubPrNumber}
+              repo={githubRepo}
+              branch={card.githubBranch}
+            />
+          </span>
+        )}
         {card.dueDate && (
           <span className={classNames(styles.attachment, styles.attachmentLeft)}>
             <DueDateChip

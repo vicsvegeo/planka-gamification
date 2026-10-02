@@ -74,6 +74,8 @@ services:
 
       # GitHub integration ("Create branch" on cards): fine-grained PAT with Contents: read and write
       # - GITHUB_TOKEN=
+      # Secret of the repository webhook pointing at <BASE_URL>/api/github/webhook
+      # - GITHUB_WEBHOOK_SECRET=
 
       # - S3_ENDPOINT=
       # - S3_REGION=

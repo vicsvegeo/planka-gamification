@@ -55,6 +55,7 @@ module.exports.policies = {
   'swagger/show': true,
   'bootstrap/show': true,
   'terms/show': true,
+  'github/webhook': true, // Authenticated by its HMAC signature instead.
   'access-tokens/create': true,
   'access-tokens/verify-totp': true,
   'access-tokens/accept-terms': true,

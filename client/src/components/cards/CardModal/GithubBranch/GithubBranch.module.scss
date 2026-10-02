@@ -4,6 +4,10 @@
  */
 
 :global(#app) {
+  .badge {
+    margin-bottom: 8px;
+  }
+
   .actionButton {
     background: rgba(9, 30, 66, 0.04);
     box-shadow: none;

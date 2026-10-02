@@ -15,6 +15,7 @@ import { BoardViews } from '../../../constants/Enums';
 import TimeAgo from '../../common/TimeAgo';
 import XpChip from '../XpChip';
 import TicketKey from '../TicketKey';
+import GithubPrBadge from '../GithubPrBadge';
 import LabelChip from '../../labels/LabelChip';
 import CustomFieldValueChip from '../../custom-field-values/CustomFieldValueChip';
 
@@ -55,12 +56,13 @@ const StoryContent = React.memo(({ cardId }) => {
     selectNotificationsTotalByCardId(state, cardId),
   );
 
-  const { listName, withAge } = useSelector((state) => {
+  const { listName, withAge, githubRepo } = useSelector((state) => {
     const board = selectors.selectCurrentBoard(state);
 
     return {
       listName: list.name && (board.view === BoardViews.KANBAN ? null : list.name),
       withAge: board.displayCardAges,
+      githubRepo: board.githubRepo,
     };
   }, shallowEqual);
 
@@ -119,6 +121,17 @@ const StoryContent = React.memo(({ cardId }) => {
           <span className={classNames(styles.attachment, styles.attachmentLeft)}>
             <XpChip value={card.baseXp} />
           </span>
+          {card.githubPrState && (
+            <span className={classNames(styles.attachment, styles.attachmentLeft)}>
+              <GithubPrBadge
+                state={card.githubPrState}
+                prUrl={card.githubPrUrl}
+                prNumber={card.githubPrNumber}
+                repo={githubRepo}
+                branch={card.githubBranch}
+              />
+            </span>
+          )}
           {listName && (
             <span className={classNames(styles.attachment, styles.attachmentLeft)}>
               <span className={styles.attachmentContent}>

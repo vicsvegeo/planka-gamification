@@ -93,6 +93,8 @@ module.exports.custom = {
   // limited to the board repositories; the API URL is overridable for tests.
   githubToken: process.env.GITHUB_TOKEN,
   githubApiUrl: (process.env.GITHUB_API_URL || 'https://api.github.com').replace(/\/+$/, ''),
+  // Shared secret of the repository webhook (POST /api/github/webhook).
+  githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET,
 
   s3Endpoint: process.env.S3_ENDPOINT,
   s3Region: process.env.S3_REGION,

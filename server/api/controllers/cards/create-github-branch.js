@@ -47,6 +47,7 @@
 const { idInput } = require('../../../utils/inputs');
 const { DEFAULT_BASE_BRANCH, buildBranchName } = require('../../../utils/github-branches');
 const { pickBranchType } = require('../../../utils/type-labels');
+const { PrStates } = require('../../../utils/github-webhooks');
 const { GithubError, createGithubClient } = require('../../../utils/github-api');
 
 const Errors = {
@@ -164,6 +165,9 @@ module.exports = {
       },
       {
         githubBranch: branch,
+        ...(!card.githubPrState && {
+          githubPrState: PrStates.BRANCH,
+        }),
       },
     );
 
@@ -175,7 +179,7 @@ module.exports = {
       `board:${updatedCard.boardId}`,
       'cardUpdate',
       {
-        item: _.pick(updatedCard, ['id', 'githubBranch']),
+        item: _.pick(updatedCard, ['id', 'githubBranch', 'githubPrState']),
       },
       this.req,
     );

@@ -122,3 +122,11 @@ export const NotificationServiceFormats = {
   MARKDOWN: 'markdown',
   HTML: 'html',
 };
+
+// Keep in sync with PrStates in server/utils/github-webhooks.js.
+export const GithubPrStates = {
+  BRANCH: 'branch',
+  OPEN: 'open',
+  MERGED: 'merged',
+  CLOSED: 'closed',
+};

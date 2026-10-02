@@ -10,7 +10,11 @@
  */
 
 const serveStatic = require('serve-static');
+const skipper = require('skipper');
 const sails = require('sails');
+
+// Paths whose handlers need the exact request bytes (HMAC signature checks).
+const RAW_BODY_PATHS = ['/api/github/webhook'];
 
 module.exports.http = {
   /**
@@ -51,6 +55,26 @@ module.exports.http = {
     //   var middlewareFn = skipper({ strict: true });
     //   return middlewareFn;
     // })(),
+
+    // Default Sails body parser (skipper), plus `req.rawBody` for RAW_BODY_PATHS.
+    bodyParser: skipper({
+      verify(req, res, buffer) {
+        if (RAW_BODY_PATHS.includes(req.path)) {
+          req.rawBody = buffer;
+        }
+      },
+      // Same as the Sails default.
+      // eslint-disable-next-line no-unused-vars
+      onBodyParserError(error, req, res, next) {
+        sails.log.error(`Unable to parse HTTP body- error occurred :: ${error.stack || error}`);
+
+        if (process.env.NODE_ENV === 'production') {
+          return res.status(400).send();
+        }
+
+        return res.status(400).send(`Unable to parse HTTP body- error occurred :: ${error}`);
+      },
+    }),
 
     poweredBy: false,
 

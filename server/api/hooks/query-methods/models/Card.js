@@ -47,6 +47,11 @@ const getIncompleteWithDueDate = async () => {
   return queryResult.rows.map((row) => transformRowToModel(row));
 };
 
+const getOneByTicketNumber = (ticketNumber) =>
+  Card.findOne({
+    ticketNumber,
+  });
+
 const getByListId = async (listId, { exceptIdOrIds, sort = ['position', 'id'] } = {}) => {
   const criteria = {
     listId,
@@ -263,6 +268,7 @@ module.exports = {
   getByIds,
   getByBoardId,
   getByBoardIds,
+  getOneByTicketNumber,
   getIncompleteWithDueDate,
   getByListId,
   getByEndlessListId,

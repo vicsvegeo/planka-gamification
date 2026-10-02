@@ -69,6 +69,15 @@ export default class extends BaseModel {
     githubBranch: attr({
       getDefault: () => null,
     }),
+    githubPrState: attr({
+      getDefault: () => null,
+    }),
+    githubPrNumber: attr({
+      getDefault: () => null,
+    }),
+    githubPrUrl: attr({
+      getDefault: () => null,
+    }),
     isGithubBranchCreating: attr({
       getDefault: () => false,
     }),

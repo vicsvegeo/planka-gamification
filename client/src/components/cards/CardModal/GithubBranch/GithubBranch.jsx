@@ -11,11 +11,10 @@ import { Button, Icon } from 'semantic-ui-react';
 
 import selectors from '../../../../selectors';
 import entryActions from '../../../../entry-actions';
+import buildGithubBranchUrl from '../../../../utils/build-github-branch-url';
+import GithubPrBadge from '../../GithubPrBadge';
 
 import styles from './GithubBranch.module.scss';
-
-const buildBranchUrl = (repo, branch) =>
-  `https://github.com/${repo}/tree/${branch.split('/').map(encodeURIComponent).join('/')}`;
 
 const GithubBranch = React.memo(({ canCreate }) => {
   const board = useSelector(selectors.selectCurrentBoard);
@@ -47,6 +46,17 @@ const GithubBranch = React.memo(({ canCreate }) => {
     <div className={styles.wrapper}>
       <Icon name="github" className={styles.moduleIcon} />
       <div className={styles.moduleHeader}>{t('common.github')}</div>
+      {card.githubPrState && (
+        <div className={styles.badge}>
+          <GithubPrBadge
+            state={card.githubPrState}
+            prUrl={card.githubPrUrl}
+            prNumber={card.githubPrNumber}
+            repo={board.githubRepo}
+            branch={card.githubBranch}
+          />
+        </div>
+      )}
       {card.githubBranch ? (
         <>
           <div className={styles.branch}>
@@ -62,7 +72,7 @@ const GithubBranch = React.memo(({ canCreate }) => {
           {board.githubRepo && (
             <Button
               as="a"
-              href={buildBranchUrl(board.githubRepo, card.githubBranch)}
+              href={buildGithubBranchUrl(board.githubRepo, card.githubBranch)}
               target="_blank"
               rel="noreferrer"
               className={styles.actionButton}

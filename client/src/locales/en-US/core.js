@@ -266,6 +266,10 @@ export default {
       github: 'GitHub',
       githubBaseBranch: 'Base branch',
       githubBranch: 'Branch',
+      githubPrState_branch: 'Branch only',
+      githubPrState_closed: 'PR closed',
+      githubPrState_merged: 'PR merged',
+      githubPrState_open: 'PR open',
       githubRepository: 'Repository',
       githubSettingsHint:
         'Cards on this board can create a branch in this repository (owner/repo). Leave the base branch empty to use main. The server needs a GITHUB_TOKEN.',

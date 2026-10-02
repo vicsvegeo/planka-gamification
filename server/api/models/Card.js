@@ -145,6 +145,22 @@
  *           nullable: true
  *           description: Name of the GitHub branch created for this card
  *           example: feat/BLAPP-42-implement-user-authentication
+ *         githubPrState:
+ *           type: string
+ *           enum: [branch, open, merged, closed]
+ *           nullable: true
+ *           description: State of the work on the card's branch, reported by GitHub webhooks
+ *           example: open
+ *         githubPrNumber:
+ *           type: integer
+ *           nullable: true
+ *           description: Number of the GitHub pull request the state refers to
+ *           example: 12
+ *         githubPrUrl:
+ *           type: string
+ *           nullable: true
+ *           description: Link to the GitHub pull request
+ *           example: https://github.com/octocat/hello-world/pull/12
  *         listChangedAt:
  *           type: string
  *           format: date-time
@@ -165,6 +181,8 @@
  *           example: 2024-01-01T00:00:00.000Z
  */
 
+const { PrStates } = require('../../utils/github-webhooks');
+
 const Types = {
   PROJECT: 'project',
   STORY: 'story',
@@ -172,6 +190,7 @@ const Types = {
 
 module.exports = {
   Types,
+  PrStates,
 
   attributes: {
     //  ╔═╗╦═╗╦╔╦╗╦╔╦╗╦╦  ╦╔═╗╔═╗
@@ -232,6 +251,22 @@ module.exports = {
       type: 'string',
       allowNull: true,
       columnName: 'github_branch',
+    },
+    githubPrState: {
+      type: 'string',
+      isIn: Object.values(PrStates),
+      allowNull: true,
+      columnName: 'github_pr_state',
+    },
+    githubPrNumber: {
+      type: 'number',
+      allowNull: true,
+      columnName: 'github_pr_number',
+    },
+    githubPrUrl: {
+      type: 'string',
+      allowNull: true,
+      columnName: 'github_pr_url',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗
