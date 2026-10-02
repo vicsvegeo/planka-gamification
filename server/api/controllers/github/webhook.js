@@ -159,14 +159,15 @@ module.exports = {
     }
 
     const board = await Board.qm.getOneById(card.boardId);
+    const project = board && (await Project.qm.getOneById(board.projectId));
 
     if (
-      board &&
-      board.githubRepo &&
-      board.githubRepo.toLowerCase() !== (event.repo || '').toLowerCase()
+      project &&
+      project.githubRepo &&
+      project.githubRepo.toLowerCase() !== (event.repo || '').toLowerCase()
     ) {
       return {
-        result: `ignored: card board is linked to ${board.githubRepo}, not ${event.repo}`,
+        result: `ignored: card project is linked to ${project.githubRepo}, not ${event.repo}`,
       };
     }
 

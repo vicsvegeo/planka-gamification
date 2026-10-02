@@ -63,16 +63,6 @@
  *                 type: boolean
  *                 description: Whether to expand task lists by default
  *                 example: false
- *               githubRepo:
- *                 type: string
- *                 nullable: true
- *                 description: GitHub repository (owner/repo) that ticket branches are created in
- *                 example: octocat/hello-world
- *               githubBaseBranch:
- *                 type: string
- *                 nullable: true
- *                 description: Branch new ticket branches are created from (main when not set)
- *                 example: main
  *               isSubscribed:
  *                 type: boolean
  *                 description: Whether the current user is subscribed to the board
@@ -98,7 +88,6 @@
  */
 
 const { idInput } = require('../../../utils/inputs');
-const { isValidRepo, isValidBranchName } = require('../../../utils/github-branches');
 
 const Errors = {
   BOARD_NOT_FOUND: {
@@ -141,17 +130,6 @@ module.exports = {
     expandTaskListsByDefault: {
       type: 'boolean',
     },
-    githubRepo: {
-      type: 'string',
-      allowNull: true,
-      maxLength: 200,
-      custom: isValidRepo,
-    },
-    githubBaseBranch: {
-      type: 'string',
-      allowNull: true,
-      custom: isValidBranchName,
-    },
     isSubscribed: {
       type: 'boolean',
     },
@@ -191,8 +169,6 @@ module.exports = {
         'alwaysDisplayCardCreator',
         'displayCardAges',
         'expandTaskListsByDefault',
-        'githubRepo',
-        'githubBaseBranch',
       );
     }
     if (isBoardMember) {
@@ -212,8 +188,6 @@ module.exports = {
       'alwaysDisplayCardCreator',
       'displayCardAges',
       'expandTaskListsByDefault',
-      'githubRepo',
-      'githubBaseBranch',
       'isSubscribed',
     ]);
 

@@ -63,7 +63,7 @@ const StoryContent = React.memo(({ cardId }) => {
     return {
       listName: list.name && (board.view === BoardViews.KANBAN ? null : list.name),
       withAge: board.displayCardAges,
-      githubRepo: board.githubRepo,
+      githubRepo: selectors.selectCurrentProject(state).githubRepo,
     };
   }, shallowEqual);
 

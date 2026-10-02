@@ -8,7 +8,7 @@
  * /cards/{id}/github-branch:
  *   post:
  *     summary: Create GitHub branch for card
- *     description: Creates a `<type>/BLAPP-<n>-<slug>` branch (type = the card's first type label, feat by default) from the tip of the board's base branch in the board's GitHub repository, or reuses it if it already exists, and stores its name on the card. Requires board editor permissions.
+ *     description: Creates a `<type>/BLAPP-<n>-<slug>` branch (type = the card's first type label, feat by default) from the tip of the project's base branch in the project's GitHub repository, or reuses it if it already exists, and stores its name on the card. Requires board editor permissions.
  *     tags:
  *       - Cards
  *     operationId: createCardGithubBranch
@@ -60,8 +60,8 @@ const Errors = {
   GITHUB_NOT_CONFIGURED: {
     githubNotConfigured: 'GitHub is not configured on this server (GITHUB_TOKEN is missing)',
   },
-  BOARD_HAS_NO_GITHUB_REPO: {
-    boardHasNoGithubRepo: 'This board has no GitHub repository set',
+  PROJECT_HAS_NO_GITHUB_REPO: {
+    projectHasNoGithubRepo: 'This project has no GitHub repository set',
   },
 };
 
@@ -83,7 +83,7 @@ module.exports = {
     githubNotConfigured: {
       responseType: 'unprocessableEntity',
     },
-    boardHasNoGithubRepo: {
+    projectHasNoGithubRepo: {
       responseType: 'unprocessableEntity',
     },
     githubRequestFailed: {
@@ -94,7 +94,7 @@ module.exports = {
   async fn(inputs) {
     const { currentUser } = this.req;
 
-    const { card, board } = await sails.helpers.cards
+    const { card, board, project } = await sails.helpers.cards
       .getPathToProjectById(inputs.id)
       .intercept('pathNotFound', () => Errors.CARD_NOT_FOUND);
 
@@ -118,8 +118,8 @@ module.exports = {
       };
     }
 
-    if (!board.githubRepo) {
-      throw Errors.BOARD_HAS_NO_GITHUB_REPO;
+    if (!project.githubRepo) {
+      throw Errors.PROJECT_HAS_NO_GITHUB_REPO;
     }
 
     const { githubToken, githubApiUrl, outgoingProxy } = sails.config.custom;
@@ -145,8 +145,8 @@ module.exports = {
 
     try {
       await github.ensureBranch({
-        repo: board.githubRepo,
-        baseBranch: board.githubBaseBranch || DEFAULT_BASE_BRANCH,
+        repo: project.githubRepo,
+        baseBranch: project.githubBaseBranch || DEFAULT_BASE_BRANCH,
         branch,
       });
     } catch (error) {

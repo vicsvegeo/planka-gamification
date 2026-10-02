@@ -19,6 +19,8 @@ export default class extends BaseModel {
     backgroundType: attr(),
     backgroundGradient: attr(),
     isHidden: attr(),
+    githubRepo: attr(),
+    githubBaseBranch: attr(),
     isFavorite: attr({
       getDefault: () => false,
     }),

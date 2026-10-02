@@ -275,7 +275,7 @@ export default {
       githubPrState_open: 'PR open',
       githubRepository: 'Repository',
       githubSettingsHint:
-        'Cards on this board can create a branch in this repository (owner/repo). Leave the base branch empty to use main. The server needs a GITHUB_TOKEN.',
+        'Cards in this project can create a branch in this repository (owner/repo). Leave the base branch empty to use main. The server needs a GITHUB_TOKEN.',
       invalidGithubBranchName: 'Not a valid branch name',
       invalidGithubRepository: 'Use the owner/repo format',
       gradients: 'Gradients',

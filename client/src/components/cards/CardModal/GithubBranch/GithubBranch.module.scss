@@ -4,19 +4,14 @@
  */
 
 :global(#app) {
-  .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
   .actionButton {
     background: rgba(9, 30, 66, 0.04);
     box-shadow: none;
     color: #17394d;
     font-weight: normal;
+    line-height: 20px;
     margin: 0;
+    padding: 6px 12px;
 
     &:hover {
       background: rgba(9, 30, 66, 0.08);
@@ -79,6 +74,14 @@
     position: absolute;
     top: 2px;
     width: 32px;
+  }
+
+  .row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
   }
 
   .wrapper {

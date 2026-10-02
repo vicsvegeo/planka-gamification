@@ -78,16 +78,6 @@
  *           default: false
  *           description: Whether to expand task lists by default
  *           example: false
- *         githubRepo:
- *           type: string
- *           nullable: true
- *           description: GitHub repository (owner/repo) that ticket branches are created in
- *           example: octocat/hello-world
- *         githubBaseBranch:
- *           type: string
- *           nullable: true
- *           description: Branch new ticket branches are created from (main when not set)
- *           example: main
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -162,16 +152,6 @@ module.exports = {
       type: 'boolean',
       defaultsTo: false,
       columnName: 'expand_task_lists_by_default',
-    },
-    githubRepo: {
-      type: 'string',
-      allowNull: true,
-      columnName: 'github_repo',
-    },
-    githubBaseBranch: {
-      type: 'string',
-      allowNull: true,
-      columnName: 'github_base_branch',
     },
 
     //  ╔═╗╔╦╗╔╗ ╔═╗╔╦╗╔═╗

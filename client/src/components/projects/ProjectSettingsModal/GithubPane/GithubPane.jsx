@@ -17,20 +17,17 @@ import { isGithubBranchName, isGithubRepo } from '../../../../utils/validator';
 import styles from './GithubPane.module.scss';
 
 const GithubPane = React.memo(() => {
-  const selectBoardById = useMemo(() => selectors.makeSelectBoardById(), []);
-
-  const boardId = useSelector((state) => selectors.selectCurrentModal(state).params.id);
-  const board = useSelector((state) => selectBoardById(state, boardId));
+  const project = useSelector(selectors.selectCurrentProject);
 
   const dispatch = useDispatch();
   const [t] = useTranslation();
 
   const defaultData = useMemo(
     () => ({
-      githubRepo: board.githubRepo,
-      githubBaseBranch: board.githubBaseBranch,
+      githubRepo: project.githubRepo,
+      githubBaseBranch: project.githubBaseBranch,
     }),
-    [board.githubRepo, board.githubBaseBranch],
+    [project.githubRepo, project.githubBaseBranch],
   );
 
   const [data, handleFieldChange] = useForm(() => ({
@@ -55,8 +52,8 @@ const GithubPane = React.memo(() => {
       return;
     }
 
-    dispatch(entryActions.updateBoard(boardId, cleanData));
-  }, [boardId, dispatch, cleanData, isRepoValid, isBaseBranchValid]);
+    dispatch(entryActions.updateCurrentProject(cleanData));
+  }, [dispatch, cleanData, isRepoValid, isBaseBranchValid]);
 
   return (
     <Tab.Pane attached={false} className={styles.wrapper}>

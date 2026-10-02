@@ -33,8 +33,6 @@ export default class extends BaseModel {
     alwaysDisplayCardCreator: attr(),
     displayCardAges: attr(),
     expandTaskListsByDefault: attr(),
-    githubRepo: attr(),
-    githubBaseBranch: attr(),
     context: attr(),
     view: attr(),
     search: attr(),

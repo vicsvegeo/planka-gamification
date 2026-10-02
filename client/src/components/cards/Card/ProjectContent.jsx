@@ -87,7 +87,7 @@ const ProjectContent = React.memo(({ cardId }) => {
       listName: list.name && (board.view === BoardViews.KANBAN ? null : list.name),
       withCreator: board.alwaysDisplayCardCreator,
       withAge: board.displayCardAges,
-      githubRepo: board.githubRepo,
+      githubRepo: selectors.selectCurrentProject(state).githubRepo,
     };
   }, shallowEqual);
 

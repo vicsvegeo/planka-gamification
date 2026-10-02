@@ -60,6 +60,16 @@
  *                 nullable: true
  *                 description: Gradient background for the project
  *                 example: ocean-dive
+ *               githubRepo:
+ *                 type: string
+ *                 nullable: true
+ *                 description: GitHub repository (owner/repo) that ticket branches are created in
+ *                 example: octocat/hello-world
+ *               githubBaseBranch:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Branch new ticket branches are created from (main when not set)
+ *                 example: main
  *               isHidden:
  *                 type: boolean
  *                 description: Whether the project is hidden
@@ -101,6 +111,7 @@
  */
 
 const { idInput } = require('../../../utils/inputs');
+const { isValidRepo, isValidBranchName } = require('../../../utils/github-branches');
 const { isDueDate } = require('../../../utils/validators');
 
 const Errors = {
@@ -164,6 +175,17 @@ module.exports = {
       type: 'string',
       isIn: Project.BACKGROUND_GRADIENTS,
       allowNull: true,
+    },
+    githubRepo: {
+      type: 'string',
+      allowNull: true,
+      maxLength: 200,
+      custom: isValidRepo,
+    },
+    githubBaseBranch: {
+      type: 'string',
+      allowNull: true,
+      custom: isValidBranchName,
     },
     isHidden: {
       type: 'boolean',
@@ -241,6 +263,8 @@ module.exports = {
         'description',
         'backgroundType',
         'backgroundGradient',
+        'githubRepo',
+        'githubBaseBranch',
       );
     }
 
@@ -297,6 +321,8 @@ module.exports = {
       'description',
       'backgroundType',
       'backgroundGradient',
+      'githubRepo',
+      'githubBaseBranch',
       'isHidden',
       'isFavorite',
       'snoozedUntil',
