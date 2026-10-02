@@ -72,9 +72,10 @@ services:
       # Set to true to expose the Swagger specification at /swagger.json
       # - SWAGGER_EXPOSED=false
 
-      # GitHub integration: fine-grained PAT with Contents + Pull requests: read and write
-      # - GITHUB_TOKEN=
-      # Secret of the repository webhook pointing at <BASE_URL>/api/github/webhook
+      # GitHub integration (GitHub App): app ID, private key (inline with \n or a file)
+      # and the app webhook secret (webhook URL: <BASE_URL>/api/github/webhook)
+      # - GITHUB_APP_ID=
+      # - GITHUB_APP_PRIVATE_KEY_FILE=/run/secrets/github_app_private_key
       # - GITHUB_WEBHOOK_SECRET=
 
       # - S3_ENDPOINT=

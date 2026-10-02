@@ -8,6 +8,7 @@
  * https://sailsjs.com/config/custom
  */
 
+const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 const bytes = require('bytes');
@@ -27,6 +28,14 @@ const envToNumber = (value) => {
 const envToBytes = (value) => bytes(value);
 
 const envToArray = (value) => (value ? value.split(',') : []);
+
+const readGithubAppPrivateKey = () => {
+  const value = process.env.GITHUB_APP_PRIVATE_KEY_FILE
+    ? fs.readFileSync(process.env.GITHUB_APP_PRIVATE_KEY_FILE, 'utf8')
+    : process.env.GITHUB_APP_PRIVATE_KEY;
+
+  return value ? value.replace(/\\n/g, '\n').trim() : undefined;
+};
 
 const baseUrl = envToArray(process.env.BASE_URL)[0];
 const parsedBasedUrl = new URL(baseUrl);
@@ -89,9 +98,11 @@ module.exports.custom = {
   botServiceUrl: process.env.BOT_SERVICE_URL,
   botServiceSecret: process.env.BOT_SERVICE_SECRET,
 
-  // Fork addition — GitHub integration (ticket branches). A fine-grained PAT
-  // limited to the board repositories; the API URL is overridable for tests.
-  githubToken: process.env.GITHUB_TOKEN,
+  // Fork addition — GitHub integration, authenticated as a GitHub App. The
+  // private key comes inline (literal "\n" allowed) or from a file; the API URL
+  // is overridable for GitHub Enterprise and tests.
+  githubAppId: process.env.GITHUB_APP_ID,
+  githubAppPrivateKey: readGithubAppPrivateKey(),
   githubApiUrl: (process.env.GITHUB_API_URL || 'https://api.github.com').replace(/\/+$/, ''),
   // Shared secret of the repository webhook (POST /api/github/webhook).
   githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET,

@@ -6,8 +6,6 @@
 const { ProxyAgent } = require('undici');
 
 const REQUEST_TIMEOUT = 10000;
-const REPOSITORIES_PER_PAGE = 100;
-const MAX_REPOSITORY_PAGES = 10;
 
 class GithubError extends Error {
   constructor(message, status) {
@@ -51,11 +49,11 @@ const createGithubClient = ({ token, apiUrl, outgoingProxy }) => {
   const describeFailure = (status, repo) => {
     switch (status) {
       case 401:
-        return 'GitHub rejected the token (expired or revoked?)';
+        return 'GitHub rejected the credentials (check the GitHub App configuration)';
       case 403:
-        return `The GitHub token is not allowed to write to ${repo}`;
+        return `The GitHub App is not allowed to write to ${repo} (needs Contents: read and write)`;
       case 404:
-        return `Repository ${repo} not found, or the token has no access to it`;
+        return `Repository ${repo} not found, or the GitHub App is not installed on it`;
       default:
         return `GitHub request failed with status ${status}`;
     }
@@ -116,7 +114,7 @@ const createGithubClient = ({ token, apiUrl, outgoingProxy }) => {
 
     if (updated.status === 403) {
       throw new GithubError(
-        `The GitHub token is not allowed to edit pull requests in ${repo} (needs Pull requests: read and write)`,
+        `The GitHub App is not allowed to edit pull requests in ${repo} (needs Pull requests: read and write)`,
         403,
       );
     }
@@ -124,43 +122,7 @@ const createGithubClient = ({ token, apiUrl, outgoingProxy }) => {
     throw new GithubError(describeFailure(updated.status, repo), updated.status);
   };
 
-  // Repositories the token can access (for a fine-grained PAT: the selected ones).
-  const listRepositories = async () => {
-    const repositories = [];
-
-    for (let page = 1; page <= MAX_REPOSITORY_PAGES; page += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      const response = await request(
-        'GET',
-        `/user/repos?per_page=${REPOSITORIES_PER_PAGE}&page=${page}&sort=full_name`,
-      );
-
-      if (response.status !== 200 || !Array.isArray(response.body)) {
-        throw new GithubError(
-          response.status === 401
-            ? describeFailure(401)
-            : `Could not list repositories (GitHub status ${response.status})`,
-          response.status,
-        );
-      }
-
-      repositories.push(
-        ...response.body.map((repository) => ({
-          fullName: repository.full_name,
-          defaultBranch: repository.default_branch,
-          isPrivate: repository.private,
-        })),
-      );
-
-      if (response.body.length < REPOSITORIES_PER_PAGE) {
-        break;
-      }
-    }
-
-    return repositories;
-  };
-
-  return { request, ensureBranch, updatePullRequestBody, listRepositories };
+  return { request, ensureBranch, updatePullRequestBody };
 };
 
 module.exports = {

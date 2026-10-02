@@ -275,7 +275,7 @@ export default {
       githubPrState_open: 'PR open',
       githubRepository: 'Repository',
       githubSettingsHint:
-        'Cards in this project can create a branch in this repository. The list shows the repositories the server GitHub token can access: give the token access to a repository to add it here. Leave the base branch empty to use main.',
+        'Cards in this project can create a branch in this repository. The list shows the repositories the Planka GitHub App is installed on: install the app on a repository to add it here. Leave the base branch empty to use main.',
       invalidGithubBranchName: 'Not a valid branch name',
       invalidGithubRepository: 'Use the owner/repo format',
       gradients: 'Gradients',

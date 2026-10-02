@@ -27,7 +27,8 @@ const {
   parseTicketNumber,
   parseEvent,
 } = require('../../../utils/github-webhooks');
-const { GithubError, createGithubClient } = require('../../../utils/github-api');
+const { GithubError } = require('../../../utils/github-api');
+const { getGithubApp } = require('../../../utils/github-app');
 const { buildBlock, mergeIntoBody } = require('../../../utils/card-context');
 const { formatTicketKey } = require('../../../utils/ticket-keys');
 
@@ -44,10 +45,11 @@ const Errors = {
 // so a re-sync replaces it). Never fails the delivery: problems are reported in
 // the result instead.
 const syncPullRequestDescription = async (card, repo, pullRequest) => {
-  const { githubToken, githubApiUrl, outgoingProxy, baseUrl } = sails.config.custom;
+  const { baseUrl } = sails.config.custom;
+  const githubApp = getGithubApp();
 
-  if (!githubToken) {
-    return 'description not synced: GITHUB_TOKEN is missing';
+  if (!githubApp) {
+    return 'description not synced: the GitHub App is not configured';
   }
 
   const block = buildBlock({
@@ -63,13 +65,9 @@ const syncPullRequestDescription = async (card, repo, pullRequest) => {
     return 'description already up to date';
   }
 
-  const github = createGithubClient({
-    token: githubToken,
-    apiUrl: githubApiUrl,
-    outgoingProxy,
-  });
-
   try {
+    const github = await githubApp.clientForRepo(repo);
+
     await github.updatePullRequestBody({
       repo,
       number: pullRequest.number,

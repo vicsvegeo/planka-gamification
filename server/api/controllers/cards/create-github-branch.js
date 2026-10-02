@@ -48,7 +48,8 @@ const { idInput } = require('../../../utils/inputs');
 const { DEFAULT_BASE_BRANCH, buildBranchName } = require('../../../utils/github-branches');
 const { pickBranchType } = require('../../../utils/type-labels');
 const { PrStates } = require('../../../utils/github-webhooks');
-const { GithubError, createGithubClient } = require('../../../utils/github-api');
+const { GithubError } = require('../../../utils/github-api');
+const { getGithubApp } = require('../../../utils/github-app');
 
 const Errors = {
   NOT_ENOUGH_RIGHTS: {
@@ -58,7 +59,8 @@ const Errors = {
     cardNotFound: 'Card not found',
   },
   GITHUB_NOT_CONFIGURED: {
-    githubNotConfigured: 'GitHub is not configured on this server (GITHUB_TOKEN is missing)',
+    githubNotConfigured:
+      'GitHub is not configured on this server (GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY missing)',
   },
   PROJECT_HAS_NO_GITHUB_REPO: {
     projectHasNoGithubRepo: 'This project has no GitHub repository set',
@@ -122,9 +124,9 @@ module.exports = {
       throw Errors.PROJECT_HAS_NO_GITHUB_REPO;
     }
 
-    const { githubToken, githubApiUrl, outgoingProxy } = sails.config.custom;
+    const githubApp = getGithubApp();
 
-    if (!githubToken) {
+    if (!githubApp) {
       throw Errors.GITHUB_NOT_CONFIGURED;
     }
 
@@ -137,13 +139,9 @@ module.exports = {
       name: card.name,
     });
 
-    const github = createGithubClient({
-      token: githubToken,
-      apiUrl: githubApiUrl,
-      outgoingProxy,
-    });
-
     try {
+      const github = await githubApp.clientForRepo(project.githubRepo);
+
       await github.ensureBranch({
         repo: project.githubRepo,
         baseBranch: project.githubBaseBranch || DEFAULT_BASE_BRANCH,

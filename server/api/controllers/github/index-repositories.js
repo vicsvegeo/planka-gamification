@@ -8,7 +8,7 @@
  * /github/repositories:
  *   get:
  *     summary: Get GitHub repositories
- *     description: Lists the GitHub repositories the server's GITHUB_TOKEN can access, sorted by name, for linking a project. Requires admin or project manager rights.
+ *     description: Lists the GitHub repositories the GitHub App is installed on (across all its installations), sorted by name, for linking a project. Requires admin or project manager rights.
  *     tags:
  *       - GitHub
  *     operationId: getGithubRepositories
@@ -44,14 +44,16 @@
  *         $ref: '#/components/responses/UnprocessableEntity'
  */
 
-const { GithubError, createGithubClient } = require('../../../utils/github-api');
+const { GithubError } = require('../../../utils/github-api');
+const { getGithubApp } = require('../../../utils/github-app');
 
 const Errors = {
   NOT_ENOUGH_RIGHTS: {
     notEnoughRights: 'Not enough rights',
   },
   GITHUB_NOT_CONFIGURED: {
-    githubNotConfigured: 'GitHub is not configured on this server (GITHUB_TOKEN is missing)',
+    githubNotConfigured:
+      'GitHub is not configured on this server (GITHUB_APP_ID / GITHUB_APP_PRIVATE_KEY missing)',
   },
 };
 
@@ -79,21 +81,15 @@ module.exports = {
       }
     }
 
-    const { githubToken, githubApiUrl, outgoingProxy } = sails.config.custom;
+    const githubApp = getGithubApp();
 
-    if (!githubToken) {
+    if (!githubApp) {
       throw Errors.GITHUB_NOT_CONFIGURED;
     }
 
-    const github = createGithubClient({
-      token: githubToken,
-      apiUrl: githubApiUrl,
-      outgoingProxy,
-    });
-
     let repositories;
     try {
-      repositories = await github.listRepositories();
+      repositories = await githubApp.listRepositories();
     } catch (error) {
       if (error instanceof GithubError) {
         throw {
