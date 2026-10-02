@@ -7,6 +7,7 @@ import http from './http';
 import socket from './socket';
 import bootstrap from './bootstrap';
 import terms from './terms';
+import github from './github';
 import accessTokens from './access-tokens';
 import config from './config';
 import webhooks from './webhooks';
@@ -38,6 +39,7 @@ export { http, socket };
 export default {
   ...bootstrap,
   ...terms,
+  ...github,
   ...accessTokens,
   ...config,
   ...webhooks,

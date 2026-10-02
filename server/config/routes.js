@@ -198,6 +198,7 @@ module.exports.routes = {
   'POST /api/cards/:id/duplicate': 'cards/duplicate',
   'POST /api/cards/:id/github-branch': 'cards/create-github-branch',
 
+  'GET /api/github/repositories': 'github/index-repositories',
   'POST /api/github/webhook': 'github/webhook',
   'POST /api/cards/:id/read-notifications': 'cards/read-notifications',
   'DELETE /api/cards/:id': 'cards/delete',

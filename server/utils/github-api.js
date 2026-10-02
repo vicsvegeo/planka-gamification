@@ -6,6 +6,8 @@
 const { ProxyAgent } = require('undici');
 
 const REQUEST_TIMEOUT = 10000;
+const REPOSITORIES_PER_PAGE = 100;
+const MAX_REPOSITORY_PAGES = 10;
 
 class GithubError extends Error {
   constructor(message, status) {
@@ -122,7 +124,43 @@ const createGithubClient = ({ token, apiUrl, outgoingProxy }) => {
     throw new GithubError(describeFailure(updated.status, repo), updated.status);
   };
 
-  return { request, ensureBranch, updatePullRequestBody };
+  // Repositories the token can access (for a fine-grained PAT: the selected ones).
+  const listRepositories = async () => {
+    const repositories = [];
+
+    for (let page = 1; page <= MAX_REPOSITORY_PAGES; page += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const response = await request(
+        'GET',
+        `/user/repos?per_page=${REPOSITORIES_PER_PAGE}&page=${page}&sort=full_name`,
+      );
+
+      if (response.status !== 200 || !Array.isArray(response.body)) {
+        throw new GithubError(
+          response.status === 401
+            ? describeFailure(401)
+            : `Could not list repositories (GitHub status ${response.status})`,
+          response.status,
+        );
+      }
+
+      repositories.push(
+        ...response.body.map((repository) => ({
+          fullName: repository.full_name,
+          defaultBranch: repository.default_branch,
+          isPrivate: repository.private,
+        })),
+      );
+
+      if (response.body.length < REPOSITORIES_PER_PAGE) {
+        break;
+      }
+    }
+
+    return repositories;
+  };
+
+  return { request, ensureBranch, updatePullRequestBody, listRepositories };
 };
 
 module.exports = {
