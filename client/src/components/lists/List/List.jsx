@@ -226,6 +226,7 @@ const List = React.memo(({ id, index }) => {
                     />
                   )}
                   {list.name}
+                  <span className={styles.headerCardsCount}>{cardIds.length}</span>
                 </div>
               )}
               {list.type !== ListTypes.ACTIVE && (

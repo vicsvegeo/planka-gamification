@@ -150,6 +150,21 @@
     word-break: break-word;
   }
 
+  .headerCardsCount {
+    background: rgba(9, 30, 66, 0.1);
+    border-radius: 10px;
+    color: rgba(23, 57, 77, 0.85);
+    display: inline-block;
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 18px;
+    margin-left: 6px;
+    min-width: 20px;
+    padding: 0 6px;
+    text-align: center;
+    vertical-align: top;
+  }
+
   .headerNameColor {
     line-height: 1;
     margin-right: 6px;
