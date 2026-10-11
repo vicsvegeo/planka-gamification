@@ -4,6 +4,7 @@
  */
 
 const buildSearchParts = require('../../../../utils/build-query-parts');
+const { TICKET_KEY_PREFIX } = require('../../../../utils/ticket-keys');
 const { makeRowToModelTransformer } = require('../helpers');
 
 const LIMIT = 50;
@@ -101,20 +102,22 @@ const getByEndlessListId = async (listId, { before, search, userIds, labelIds })
     }
 
     if (search) {
+      queryValues.push(`${TICKET_KEY_PREFIX}-`);
+      const ticketKey = `($${queryValues.length}::text || card.ticket_number::text)`;
+
       if (search.startsWith('/')) {
         queryValues.push(search.substring(1));
-        query += ` AND (card.name ~* $${queryValues.length} OR card.description ~* $${queryValues.length})`;
+        query += ` AND (card.name ~* $${queryValues.length} OR card.description ~* $${queryValues.length} OR ${ticketKey} ~* $${queryValues.length})`;
       } else {
         const searchParts = buildSearchParts(search);
 
-        if (searchParts.length > 0) {
-          const ilikeValues = searchParts.map((searchPart) => {
-            queryValues.push(searchPart);
-            return `'%' || $${queryValues.length} || '%'`;
-          });
+        // Every part must match the name, description or ticket key (BLAPP-<n>)
+        searchParts.forEach((searchPart) => {
+          queryValues.push(searchPart);
+          const ilikeValue = `'%' || $${queryValues.length} || '%'`;
 
-          query += ` AND ((card.name ILIKE ALL(ARRAY[${ilikeValues.join(', ')}])) OR (card.description ILIKE ALL(ARRAY[${ilikeValues.join(', ')}])))`;
-        }
+          query += ` AND (card.name ILIKE ${ilikeValue} OR card.description ILIKE ${ilikeValue} OR ${ticketKey} ILIKE ${ilikeValue})`;
+        });
       }
     }
 
