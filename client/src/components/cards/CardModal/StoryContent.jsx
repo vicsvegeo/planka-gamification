@@ -3,6 +3,7 @@
  * Licensed under the Fair Use License: https://github.com/plankanban/planka/blob/master/LICENSE.md
  */
 
+import keyBy from 'lodash/keyBy';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
@@ -10,11 +11,13 @@ import { useTranslation } from 'react-i18next';
 import { Gallery, Item as GalleryItem } from 'react-photoswipe-gallery';
 import { Button, Grid, Icon } from 'semantic-ui-react';
 import { useDidUpdate } from '../../../lib/hooks';
+import { Tooltip } from '../../../lib/custom-ui';
 
 import selectors from '../../../selectors';
 import entryActions from '../../../entry-actions';
 import { usePopupInClosableContext } from '../../../hooks';
 import { isUsableMarkdownElement } from '../../../utils/element-helpers';
+import { mentionTextToMarkup } from '../../../utils/mentions';
 import { BoardMembershipRoles, CardTypes, ListTypes } from '../../../constants/Enums';
 import { CardTypeIcons } from '../../../constants/Icons';
 import { ClosableContext } from '../../../contexts';
@@ -49,6 +52,7 @@ const StoryContent = React.memo(() => {
 
   const card = useSelector(selectors.selectCurrentCard);
   const board = useSelector(selectors.selectCurrentBoard);
+  const boardMemberships = useSelector(selectors.selectMembershipsForCurrentBoard);
   const userIds = useSelector(selectors.selectUserIdsForCurrentCard);
   const labelIds = useSelector(selectors.selectLabelIdsForCurrentCard);
   const attachmentIds = useSelector(selectors.selectAttachmentIdsForCurrentCard);
@@ -143,6 +147,15 @@ const StoryContent = React.memo(() => {
   }, shallowEqual);
 
   const dispatch = useDispatch();
+  const userByUsername = useMemo(
+    () =>
+      keyBy(
+        boardMemberships.flatMap(({ user }) => (user.username ? user : [])),
+        ({ username }) => username.toLowerCase(),
+      ),
+    [boardMemberships],
+  );
+
   const [t] = useTranslation();
   const [descriptionDraft, setDescriptionDraft] = useState(null);
   const [isEditDescriptionOpened, setIsEditDescriptionOpened] = useState(false);
@@ -170,11 +183,11 @@ const StoryContent = React.memo(() => {
     (description) => {
       dispatch(
         entryActions.updateCurrentCard({
-          description,
+          description: description && mentionTextToMarkup(description, userByUsername),
         }),
       );
     },
-    [dispatch],
+    [dispatch, userByUsername],
   );
 
   const handleRestoreClick = useCallback(() => {
@@ -392,12 +405,14 @@ const StoryContent = React.memo(() => {
                         onSelect={handleLabelSelect}
                         onDeselect={handleLabelDeselect}
                       >
-                        <button
-                          type="button"
-                          className={classNames(styles.attachment, styles.dueDate)}
-                        >
-                          <Icon name="add" size="small" className={styles.addAttachment} />
-                        </button>
+                        <Tooltip content={t('action.addLabel')}>
+                          <button
+                            type="button"
+                            className={classNames(styles.attachment, styles.dueDate)}
+                          >
+                            <Icon name="add" size="small" className={styles.addAttachment} />
+                          </button>
+                        </Tooltip>
                       </LabelsPopup>
                     )}
                   </div>
@@ -441,9 +456,11 @@ const StoryContent = React.memo(() => {
                             className={classNames(styles.descriptionText, styles.cursorPointer)}
                             onClick={handleEditDescriptionClick}
                           >
-                            <Button className={styles.editButton}>
-                              <Icon fitted name="pencil" size="small" />
-                            </Button>
+                            <Tooltip content={t('action.editDescription', { context: 'title' })}>
+                              <Button className={styles.editButton}>
+                                <Icon fitted name="pencil" size="small" />
+                              </Button>
+                            </Tooltip>
                             <Markdown>{card.description}</Markdown>
                           </div>
                         ) : (
@@ -500,14 +517,16 @@ const StoryContent = React.memo(() => {
                 <div className={classNames(styles.text, styles.textList)}>{t('common.list')}</div>
                 {canUseLists ? (
                   <ListsPopup currentId={list.id} onSelect={handleListSelect}>
-                    <button type="button" className={styles.listButton}>
-                      <span className={classNames(styles.list, styles.listHoverable)}>
-                        <Icon name="columns" size="small" className={styles.listIcon} />
-                        <span className={styles.hidable}>
-                          {list.name || t(`common.${list.type}`)}
+                    <Tooltip content={t('common.selectList')}>
+                      <button type="button" className={styles.listButton}>
+                        <span className={classNames(styles.list, styles.listHoverable)}>
+                          <Icon name="columns" size="small" className={styles.listIcon} />
+                          <span className={styles.hidable}>
+                            {list.name || t(`common.${list.type}`)}
+                          </span>
                         </span>
-                      </span>
-                    </button>
+                      </button>
+                    </Tooltip>
                   </ListsPopup>
                 ) : (
                   <span className={styles.list}>

@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 import { Button, Icon } from 'semantic-ui-react';
 import { useDidUpdate, useToggle, useTransitioning } from '../../../lib/hooks';
+import { Tooltip } from '../../../lib/custom-ui';
 import { usePopup } from '../../../lib/popup';
 
 import selectors from '../../../selectors';
@@ -48,11 +49,23 @@ const List = React.memo(({ id, index }) => {
     [],
   );
 
+  const selectCardCountByListId = useMemo(() => selectors.makeSelectCardCountByListId(), []);
+
   const clipboard = useSelector(selectors.selectClipboard);
   const isFavoritesActive = useSelector(selectors.selectIsFavoritesActiveForCurrentUser);
 
   const list = useSelector((state) => selectListById(state, id));
   const cardIds = useSelector((state) => selectFilteredCardIdsByListId(state, id));
+
+  // Shown on the add-card button when the board asks for it. Counted over every
+  // card the list holds, not the ones the filter leaves standing: a filter
+  // hides cards, it does not remove them, and a number that fell as the filter
+  // narrowed would say the list had emptied.
+  const showCardCounter = useSelector(
+    (state) => selectors.selectCurrentBoard(state).showCardCounter,
+  );
+
+  const cardCount = useSelector((state) => selectCardCountByListId(state, id));
 
   const { canEdit, canArchiveCards, canAddCard, canPasteCard, canDropCard } = useSelector(
     (state) => {
@@ -146,6 +159,10 @@ const List = React.memo(({ id, index }) => {
   useDidUpdate(() => {
     cardsWrapperRef.current.scrollTop = cardsWrapperRef.current.scrollHeight;
   }, [scrollBottomState]);
+
+  const cardCountNode = showCardCounter && cardCount !== null && (
+    <span className={styles.addCardButtonCount}>{cardCount}</span>
+  );
 
   const ActionsPopup = usePopup(ActionsStep);
   const ArchiveCardsPopup = usePopup(ArchiveCardsStep);
@@ -241,16 +258,20 @@ const List = React.memo(({ id, index }) => {
               {list.isPersisted &&
                 (canEdit ? (
                   <ActionsPopup listId={id} onNameEdit={handleNameEdit} onCardAdd={handleCardAdd}>
-                    <Button className={styles.headerButton}>
-                      <Icon fitted name="pencil" size="small" />
-                    </Button>
+                    <Tooltip content={t('common.openListActions')}>
+                      <Button className={styles.headerButton}>
+                        <Icon fitted name="pencil" size="small" />
+                      </Button>
+                    </Tooltip>
                   </ActionsPopup>
                 ) : (
                   canArchiveCards && (
                     <ArchiveCardsPopup listId={id}>
-                      <Button className={styles.headerButton}>
-                        <Icon fitted name="archive" size="small" />
-                      </Button>
+                      <Tooltip content={t('action.archiveCards')}>
+                        <Button className={styles.headerButton}>
+                          <Icon fitted name="archive" size="small" />
+                        </Button>
+                      </Tooltip>
                     </ArchiveCardsPopup>
                   )
                 ))}
@@ -270,20 +291,23 @@ const List = React.memo(({ id, index }) => {
                   )}
                   onClick={handleAddCardClick}
                 >
+                  {cardCountNode}
                   <PlusMathIcon className={styles.addCardButtonIcon} />
                   <span className={styles.addCardButtonText}>
                     {cardIds.length > 0 ? t('action.addAnotherCard') : t('action.addCard')}
                   </span>
                 </button>
                 {clipboard && canPasteCard && (
-                  <button
-                    type="button"
-                    disabled={!list.isPersisted}
-                    className={classNames(styles.addCardButton, styles.paste)}
-                    onClick={handlePasteCardClick}
-                  >
-                    <Icon name="paste" />
-                  </button>
+                  <Tooltip content={t('action.paste')}>
+                    <button
+                      type="button"
+                      disabled={!list.isPersisted}
+                      className={classNames(styles.addCardButton, styles.paste)}
+                      onClick={handlePasteCardClick}
+                    >
+                      <Icon name="paste" />
+                    </button>
+                  </Tooltip>
                 )}
               </div>
             )}
