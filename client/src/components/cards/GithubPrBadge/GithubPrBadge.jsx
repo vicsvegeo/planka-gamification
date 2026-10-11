@@ -32,7 +32,10 @@ const GithubPrBadge = React.memo(({ state, prUrl, prNumber, repo, branch }) => {
     return null;
   }
 
-  const href = state === GithubPrStates.BRANCH || !prUrl ? branch && repo && buildGithubBranchUrl(repo, branch) : prUrl;
+  const href =
+    state === GithubPrStates.BRANCH || !prUrl
+      ? branch && repo && buildGithubBranchUrl(repo, branch)
+      : prUrl;
 
   const contentNode = (
     <>
