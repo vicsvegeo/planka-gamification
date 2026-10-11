@@ -60,6 +60,7 @@ Given('a card with an empty task list exists', async () => {
     name: 'Test Card',
     position: 65536,
     type: 'project',
+    baseXp: 10,
   });
 
   await post(`/cards/${card.id}/task-lists`, {
