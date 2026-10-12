@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { expect } = require('chai');
 
-const { verifySignature, parseTicketNumber, parseEvent } = require('../../utils/github-webhooks');
+const { verifySignature, parseTicketNumbers, parseEvent } = require('../../utils/github-webhooks');
 
 const sign = (secret, body) =>
   `sha256=${crypto.createHmac('sha256', secret).update(body).digest('hex')}`;
@@ -42,18 +42,27 @@ describe('github-webhooks', () => {
     });
   });
 
-  describe('#parseTicketNumber()', () => {
+  describe('#parseTicketNumbers()', () => {
     it('finds the key in generated and hand-made branch names', () => {
-      expect(parseTicketNumber('feat/BLAPP-42-crash-on-empty-list')).to.equal(42);
-      expect(parseTicketNumber('BLAPP-7')).to.equal(7);
-      expect(parseTicketNumber('victor/blapp-12_quick-fix')).to.equal(12);
+      expect(parseTicketNumbers('feat/BLAPP-42-crash-on-empty-list')).to.deep.equal([42]);
+      expect(parseTicketNumbers('BLAPP-7')).to.deep.equal([7]);
+      expect(parseTicketNumbers('victor/blapp-12_quick-fix')).to.deep.equal([12]);
+    });
+
+    it('finds every key in a branch shared by several cards', () => {
+      expect(parseTicketNumbers('BLAPP-219-BLAPP-220-shared-fix')).to.deep.equal([219, 220]);
+      expect(parseTicketNumbers('feat/blapp-3_BLAPP-1/BLAPP-3')).to.deep.equal([3, 1]);
+    });
+
+    it('needs the prefix on each key', () => {
+      expect(parseTicketNumbers('BLAPP-219-220-fix-2-bugs')).to.deep.equal([219]);
     });
 
     it('ignores branches without a key or with a longer prefix', () => {
-      expect(parseTicketNumber('main')).to.equal(null);
-      expect(parseTicketNumber('feat/XBLAPP-42')).to.equal(null);
-      expect(parseTicketNumber('feat/BLAPP-')).to.equal(null);
-      expect(parseTicketNumber(undefined)).to.equal(null);
+      expect(parseTicketNumbers('main')).to.deep.equal([]);
+      expect(parseTicketNumbers('feat/XBLAPP-42')).to.deep.equal([]);
+      expect(parseTicketNumbers('feat/BLAPP-')).to.deep.equal([]);
+      expect(parseTicketNumbers(undefined)).to.deep.equal([]);
     });
   });
 

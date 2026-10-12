@@ -24,12 +24,14 @@ const CARD_DESCRIPTION = [
 ].join('\n');
 
 const block = (description) =>
-  buildBlock({
-    ticketKey: 'BLAPP-42',
-    cardName: 'Sync context',
-    cardUrl: 'https://planka.example/cards/1',
-    description,
-  });
+  buildBlock([
+    {
+      ticketKey: 'BLAPP-42',
+      cardName: 'Sync context',
+      cardUrl: 'https://planka.example/cards/1',
+      description,
+    },
+  ]);
 
 describe('card-context', () => {
   describe('#extractSections()', () => {
@@ -84,6 +86,33 @@ describe('card-context', () => {
 
     it('notes a single missing section', () => {
       expect(block('**Why**\nBecause.')).to.include('_The card has no Done when section._');
+    });
+
+    it('gives each card of a shared branch its own linked section', () => {
+      const text = buildBlock([
+        {
+          ticketKey: 'BLAPP-219',
+          cardName: 'First',
+          cardUrl: 'https://planka.example/cards/1',
+          description: CARD_DESCRIPTION,
+        },
+        {
+          ticketKey: 'BLAPP-220',
+          cardName: 'Second',
+          cardUrl: 'https://planka.example/cards/2',
+          description: 'No structure here',
+        },
+      ]);
+
+      expect(text.startsWith(START_MARKER)).to.equal(true);
+      expect(text.endsWith(END_MARKER)).to.equal(true);
+      expect(text.split(START_MARKER)).to.have.length(2);
+      expect(text).to.include('Planka cards below');
+      expect(text).to.include(
+        '### [BLAPP-219](https://planka.example/cards/1): First\n\n#### Why\n\nThe reviewer needs context.',
+      );
+      expect(text).to.include('### [BLAPP-220](https://planka.example/cards/2): Second');
+      expect(text.indexOf('BLAPP-220')).to.be.below(text.indexOf('has no **Why**'));
     });
   });
 

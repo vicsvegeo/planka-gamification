@@ -15,7 +15,7 @@ const PrStates = {
   CLOSED: 'closed',
 };
 
-const TICKET_KEY_REGEX = new RegExp(`(?:^|[^A-Za-z0-9])${TICKET_KEY_PREFIX}-(\\d+)(?![0-9])`, 'i');
+const TICKET_KEY_REGEX = new RegExp(`(?:^|[^A-Za-z0-9])${TICKET_KEY_PREFIX}-(\\d+)(?![0-9])`, 'gi');
 
 // GitHub signs the raw body: X-Hub-Signature-256: sha256=<hex HMAC-SHA256>.
 const verifySignature = (secret, rawBody, signatureHeader) => {
@@ -31,13 +31,18 @@ const verifySignature = (secret, rawBody, signatureHeader) => {
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 };
 
-const parseTicketNumber = (branchName) => {
+// Every ticket key in the branch name, so one branch (and its PR) can cover
+// several cards: BLAPP-219-BLAPP-220-shared-fix. Each key needs its prefix.
+const parseTicketNumbers = (branchName) => {
   if (typeof branchName !== 'string') {
-    return null;
+    return [];
   }
 
-  const match = branchName.match(TICKET_KEY_REGEX);
-  return match ? parseInt(match[1], 10) : null;
+  const ticketNumbers = Array.from(branchName.matchAll(TICKET_KEY_REGEX), (match) =>
+    parseInt(match[1], 10),
+  );
+
+  return [...new Set(ticketNumbers)];
 };
 
 const getPrState = (pullRequest) => {
@@ -172,6 +177,6 @@ module.exports = {
   PrStates,
   BRANCH_WORK_RESET,
   verifySignature,
-  parseTicketNumber,
+  parseTicketNumbers,
   parseEvent,
 };

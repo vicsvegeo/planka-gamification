@@ -8,7 +8,7 @@
  * /github/webhook:
  *   post:
  *     summary: Receive GitHub webhook
- *     description: Receives `create`, `delete`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the card from the `BLAPP-<n>` key in the branch name, updates its PR state / CI badges and, when a PR is opened or reopened, syncs the card's Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
+ *     description: Receives `create`, `delete`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the cards from the `BLAPP-<n>` keys in the branch name (a branch can name several, e.g. `BLAPP-219-BLAPP-220-fix`), updates their PR state / CI badges and, when a PR is opened or reopened, syncs their Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
  *     tags:
  *       - GitHub
  *     operationId: receiveGithubWebhook
@@ -24,7 +24,7 @@
 
 const {
   verifySignature,
-  parseTicketNumber,
+  parseTicketNumbers,
   parseEvent,
 } = require('../../../utils/github-webhooks');
 const { GithubError } = require('../../../utils/github-api');
@@ -41,10 +41,10 @@ const Errors = {
   },
 };
 
-// Puts the card's Why / Done when into the PR description (between markers,
+// Puts the cards' Why / Done when into the PR description (between markers,
 // so a re-sync replaces it). Never fails the delivery: problems are reported in
 // the result instead.
-const syncPullRequestDescription = async (card, repo, pullRequest) => {
+const syncPullRequestDescription = async (cards, repo, pullRequest) => {
   const { baseUrl } = sails.config.custom;
   const githubApp = getGithubApp();
 
@@ -52,12 +52,14 @@ const syncPullRequestDescription = async (card, repo, pullRequest) => {
     return 'description not synced: the GitHub App is not configured';
   }
 
-  const block = buildBlock({
-    ticketKey: formatTicketKey(card.ticketNumber),
-    cardName: card.name,
-    cardUrl: `${baseUrl.replace(/\/+$/, '')}/cards/${card.id}`,
-    description: card.description,
-  });
+  const block = buildBlock(
+    cards.map((card) => ({
+      ticketKey: formatTicketKey(card.ticketNumber),
+      cardName: card.name,
+      cardUrl: `${baseUrl.replace(/\/+$/, '')}/cards/${card.id}`,
+      description: card.description,
+    })),
+  );
 
   const body = mergeIntoBody(pullRequest.body, block);
 
@@ -82,6 +84,72 @@ const syncPullRequestDescription = async (card, repo, pullRequest) => {
   }
 
   return `synced card context into PR #${pullRequest.number}`;
+};
+
+// Applies the event to the card with this ticket number. Returns the card when
+// it belongs to the event's repo (so its context goes into the PR description),
+// and a message for the delivery result.
+const updateCard = async (ticketNumber, event) => {
+  const card = await Card.qm.getOneByTicketNumber(ticketNumber);
+
+  if (!card) {
+    return {
+      message: `ignored: no card for ticket ${ticketNumber}`,
+    };
+  }
+
+  const board = await Board.qm.getOneById(card.boardId);
+  const project = board && (await Project.qm.getOneById(board.projectId));
+
+  if (
+    project &&
+    project.githubRepo &&
+    project.githubRepo.toLowerCase() !== (event.repo || '').toLowerCase()
+  ) {
+    return {
+      message: `ignored: card ${ticketNumber} project is linked to ${project.githubRepo}, not ${event.repo}`,
+    };
+  }
+
+  const values = event.buildValues(card);
+
+  if (!values) {
+    return {
+      card,
+      message: `ignored: event does not change card ${card.id}`,
+    };
+  }
+
+  // Hand-made branches get linked to the card too, but only by events that
+  // start work on a branch (never by late events for a deleted one).
+  if (event.linkBranch && !card.githubBranch && values.githubBranch === undefined) {
+    values.githubBranch = event.branch;
+  }
+
+  const { card: updatedCard } = await Card.qm.updateOne(
+    {
+      id: card.id,
+    },
+    values,
+  );
+
+  if (!updatedCard) {
+    return {
+      message: `ignored: card ${card.id} was deleted`,
+    };
+  }
+
+  sails.sockets.broadcast(`board:${updatedCard.boardId}`, 'cardUpdate', {
+    item: {
+      id: updatedCard.id,
+      ...values,
+    },
+  });
+
+  return {
+    card: updatedCard,
+    message: `updated card ${updatedCard.id}`,
+  };
 };
 
 // GitHub can deliver either JSON or form-encoded payloads.
@@ -140,74 +208,37 @@ module.exports = {
       };
     }
 
-    const ticketNumber = parseTicketNumber(event.branch);
+    const ticketNumbers = parseTicketNumbers(event.branch);
 
-    if (!ticketNumber) {
+    if (ticketNumbers.length === 0) {
       return {
         result: `ignored: no ticket key in branch ${event.branch}`,
       };
     }
 
-    const card = await Card.qm.getOneByTicketNumber(ticketNumber);
-
-    if (!card) {
-      return {
-        result: `ignored: no card for ticket ${ticketNumber}`,
-      };
-    }
-
-    const board = await Board.qm.getOneById(card.boardId);
-    const project = board && (await Project.qm.getOneById(board.projectId));
-
-    if (
-      project &&
-      project.githubRepo &&
-      project.githubRepo.toLowerCase() !== (event.repo || '').toLowerCase()
-    ) {
-      return {
-        result: `ignored: card project is linked to ${project.githubRepo}, not ${event.repo}`,
-      };
-    }
-
     const results = [];
-    const values = event.buildValues(card);
+    const syncedCards = [];
 
-    if (values) {
-      // Hand-made branches get linked to the card too, but only by events that
-      // start work on a branch (never by late events for a deleted one).
-      if (event.linkBranch && !card.githubBranch && values.githubBranch === undefined) {
-        values.githubBranch = event.branch;
+    // eslint-disable-next-line no-restricted-syntax
+    for (const ticketNumber of ticketNumbers) {
+      // eslint-disable-next-line no-await-in-loop
+      const result = await updateCard(ticketNumber, event);
+
+      if (result.card) {
+        syncedCards.push(result.card);
       }
 
-      const { card: updatedCard } = await Card.qm.updateOne(
-        {
-          id: card.id,
-        },
-        values,
-      );
-
-      if (!updatedCard) {
-        return {
-          result: 'ignored: card was deleted',
-        };
-      }
-
-      sails.sockets.broadcast(`board:${updatedCard.boardId}`, 'cardUpdate', {
-        item: {
-          id: updatedCard.id,
-          ...values,
-        },
-      });
-
-      results.push(`updated card ${updatedCard.id}`);
+      results.push(result.message);
     }
 
-    if (event.pullRequestToSync) {
-      results.push(await syncPullRequestDescription(card, event.repo, event.pullRequestToSync));
+    if (event.pullRequestToSync && syncedCards.length > 0) {
+      results.push(
+        await syncPullRequestDescription(syncedCards, event.repo, event.pullRequestToSync),
+      );
     }
 
     return {
-      result: results.length > 0 ? results.join('; ') : 'ignored: event does not change the card',
+      result: results.join('; '),
     };
   },
 };

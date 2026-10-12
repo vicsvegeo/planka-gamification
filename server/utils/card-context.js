@@ -64,15 +64,8 @@ const extractSections = (description) => {
   return sections;
 };
 
-const buildBlock = ({ ticketKey, cardName, cardUrl, description }) => {
+const pushSections = (parts, description) => {
   const { why, doneWhen } = extractSections(description);
-
-  const parts = [
-    START_MARKER,
-    `### ${ticketKey}: ${cardName}`,
-    '',
-    `_Synced from the [Planka card](${cardUrl}) when this PR was opened. Edits outside this block are kept._`,
-  ];
 
   if (!why && !doneWhen) {
     parts.push(
@@ -84,6 +77,33 @@ const buildBlock = ({ ticketKey, cardName, cardUrl, description }) => {
   } else {
     parts.push('', '#### Why', '', why || '_The card has no Why section._');
     parts.push('', '#### Done when', '', doneWhen || '_The card has no Done when section._');
+  }
+};
+
+// Takes the cards the PR's branch names ({ ticketKey, cardName, cardUrl,
+// description }); a branch with several ticket keys gets one section per card.
+const buildBlock = (cards) => {
+  const parts = [START_MARKER];
+
+  if (cards.length === 1) {
+    const [{ ticketKey, cardName, cardUrl, description }] = cards;
+
+    parts.push(
+      `### ${ticketKey}: ${cardName}`,
+      '',
+      `_Synced from the [Planka card](${cardUrl}) when this PR was opened. Edits outside this block are kept._`,
+    );
+
+    pushSections(parts, description);
+  } else {
+    parts.push(
+      '_Synced from the Planka cards below when this PR was opened. Edits outside this block are kept._',
+    );
+
+    cards.forEach(({ ticketKey, cardName, cardUrl, description }) => {
+      parts.push('', `### [${ticketKey}](${cardUrl}): ${cardName}`);
+      pushSections(parts, description);
+    });
   }
 
   parts.push(END_MARKER);
