@@ -18,12 +18,27 @@ module.exports = {
     },
   },
 
+  exits: {
+    ticketPrefixAlreadyInUse: {},
+  },
+
   async fn(inputs) {
     const { values } = inputs;
 
-    const { project, projectManager } = await Project.qm.createOne(values, {
-      user: inputs.actorUser,
-    });
+    let project;
+    let projectManager;
+
+    try {
+      ({ project, projectManager } = await Project.qm.createOne(values, {
+        user: inputs.actorUser,
+      }));
+    } catch (error) {
+      if (error.code === 'E_UNIQUE') {
+        throw 'ticketPrefixAlreadyInUse';
+      }
+
+      throw error;
+    }
 
     const scoper = sails.helpers.projects.makeScoper.with({
       record: project,

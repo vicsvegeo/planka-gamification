@@ -38,6 +38,12 @@
  *                 nullable: true
  *                 description: Detailed description of the project
  *                 example: A project for developing new features...
+ *               ticketPrefix:
+ *                 type: string
+ *                 nullable: true
+ *                 pattern: ^[A-Z]{2,10}$
+ *                 description: Own ticket key prefix for the project's cards, with its own counter: 2-10 capital letters (BLAPP when not set). Cannot be changed later.
+ *                 example: SHOP
  *     responses:
  *       200:
  *         description: Project created successfully
@@ -65,7 +71,17 @@
  *         $ref: '#/components/responses/ValidationError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ *       409:
+ *         $ref: '#/components/responses/Conflict'
  */
+
+const { DEFAULT_TICKET_PREFIX, isValidTicketPrefix } = require('../../../utils/ticket-keys');
+
+const Errors = {
+  TICKET_PREFIX_ALREADY_IN_USE: {
+    ticketPrefixAlreadyInUse: 'Ticket prefix already in use',
+  },
+};
 
 module.exports = {
   inputs: {
@@ -85,6 +101,17 @@ module.exports = {
       maxLength: 1024,
       allowNull: true,
     },
+    ticketPrefix: {
+      type: 'string',
+      allowNull: true,
+      custom: (value) => value === '' || isValidTicketPrefix(value),
+    },
+  },
+
+  exits: {
+    ticketPrefixAlreadyInUse: {
+      responseType: 'conflict',
+    },
   },
 
   async fn(inputs) {
@@ -92,11 +119,20 @@ module.exports = {
 
     const values = _.pick(inputs, ['type', 'name', 'description']);
 
-    const { project, projectManager } = await sails.helpers.projects.createOne.with({
-      values,
-      actorUser: currentUser,
-      request: this.req,
-    });
+    // No prefix (or BLAPP itself) means the shared BLAPP counter.
+    const ticketPrefix = inputs.ticketPrefix || null;
+
+    if (ticketPrefix && ticketPrefix !== DEFAULT_TICKET_PREFIX) {
+      values.ticketPrefix = ticketPrefix;
+    }
+
+    const { project, projectManager } = await sails.helpers.projects.createOne
+      .with({
+        values,
+        actorUser: currentUser,
+        request: this.req,
+      })
+      .intercept('ticketPrefixAlreadyInUse', () => Errors.TICKET_PREFIX_ALREADY_IN_USE);
 
     return {
       item: project,

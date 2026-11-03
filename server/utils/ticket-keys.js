@@ -4,11 +4,22 @@
  */
 
 // Keep in sync with client/src/utils/ticket-key.js.
-const TICKET_KEY_PREFIX = 'BLAPP';
 
-const formatTicketKey = (ticketNumber) => `${TICKET_KEY_PREFIX}-${ticketNumber}`;
+// Used by projects without their own prefix. Every prefix has its own counter
+// (the ticket_counter table, bumped by a database trigger on card insert).
+const DEFAULT_TICKET_PREFIX = 'BLAPP';
+
+// 2-10 capital letters only (no lowercase, digits or symbols).
+const TICKET_PREFIX_REGEX = /^[A-Z]{2,10}$/;
+
+const isValidTicketPrefix = (value) => TICKET_PREFIX_REGEX.test(value);
+
+// A card's key: <prefix>-<number>, e.g. BLAPP-42.
+const formatTicketKey = (ticketPrefix, ticketNumber) =>
+  `${ticketPrefix || DEFAULT_TICKET_PREFIX}-${ticketNumber}`;
 
 module.exports = {
-  TICKET_KEY_PREFIX,
+  DEFAULT_TICKET_PREFIX,
+  isValidTicketPrefix,
   formatTicketKey,
 };

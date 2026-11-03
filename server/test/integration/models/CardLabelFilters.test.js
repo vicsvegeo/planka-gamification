@@ -74,9 +74,9 @@ describe('Card label filters', () => {
     });
 
     expect(nativeQueryCalls).to.have.length(1);
-    expect(nativeQueryCalls[0].query).to.include("card.name ILIKE '%' || $3 || '%'");
+    expect(nativeQueryCalls[0].query).to.include("card.name ILIKE '%' || $2 || '%'");
     expect(nativeQueryCalls[0].query).to.include('NOT EXISTS');
-    expect(nativeQueryCalls[0].query).to.include('excluded_card_label.label_id IN ($4)');
-    expect(nativeQueryCalls[0].values).to.deep.equal(['list-1', 'BLAPP-', 'task', 'label-1']);
+    expect(nativeQueryCalls[0].query).to.include('excluded_card_label.label_id IN ($3)');
+    expect(nativeQueryCalls[0].values).to.deep.equal(['list-1', 'task', 'label-1']);
   });
 });

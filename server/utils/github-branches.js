@@ -35,9 +35,9 @@ const slugify = (text, maxLength = MAX_SLUG_LENGTH) => {
   );
 };
 
-const buildBranchName = ({ type = DEFAULT_BRANCH_TYPE, ticketNumber, name }) => {
+const buildBranchName = ({ type = DEFAULT_BRANCH_TYPE, ticketPrefix, ticketNumber, name }) => {
   const slug = slugify(name);
-  const ticketKey = formatTicketKey(ticketNumber);
+  const ticketKey = formatTicketKey(ticketPrefix, ticketNumber);
 
   return `${type}/${slug ? `${ticketKey}-${slug}` : ticketKey}`;
 };

@@ -421,6 +421,9 @@ export default {
       testLog_title: 'Test Log',
       thereIsNoPreviewAvailableForThisAttachment:
         'There is no preview available for this attachment.',
+      ticketPrefix: 'Ticket prefix',
+      ticketPrefixAlreadyInUse: 'Ticket prefix already in use',
+      ticketPrefixHint: '(optional, capital letters, BLAPP if empty, cannot be changed later)',
       time: 'Time',
       title: 'Title',
       trash: 'Trash',

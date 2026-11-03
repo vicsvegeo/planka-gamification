@@ -68,6 +68,11 @@
  *           default: false
  *           description: Whether the project is hidden
  *           example: false
+ *         ticketPrefix:
+ *           type: string
+ *           nullable: true
+ *           description: Ticket key prefix for the project's cards, with its own counter (BLAPP when not set). Set at creation only.
+ *           example: SHOP
  *         githubRepo:
  *           type: string
  *           nullable: true
@@ -165,6 +170,11 @@ module.exports = {
       type: 'boolean',
       defaultsTo: false, // TODO: implement via normalizeValues?
       columnName: 'is_hidden',
+    },
+    ticketPrefix: {
+      type: 'string',
+      allowNull: true,
+      columnName: 'ticket_prefix',
     },
     githubRepo: {
       type: 'string',

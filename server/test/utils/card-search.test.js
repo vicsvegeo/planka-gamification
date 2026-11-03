@@ -24,17 +24,19 @@ describe('card search', () => {
   it('matches each search part against the ticket key as well', async () => {
     const { query, values } = await captureSearchQuery('BLAPP-42 login');
 
-    expect(values).to.deep.equal(['1', 'BLAPP-', 'blapp-42', 'login']);
+    expect(values).to.deep.equal(['1', 'blapp-42', 'login']);
     expect(query).to.include(
-      "card.name ILIKE '%' || $3 || '%' OR card.description ILIKE '%' || $3 || '%' OR ($2::text || card.ticket_number::text) ILIKE '%' || $3 || '%'",
+      "card.name ILIKE '%' || $2 || '%' OR card.description ILIKE '%' || $2 || '%' OR (card.ticket_prefix || '-' || card.ticket_number::text) ILIKE '%' || $2 || '%'",
     );
-    expect(query).to.include("($2::text || card.ticket_number::text) ILIKE '%' || $4 || '%'");
+    expect(query).to.include(
+      "(card.ticket_prefix || '-' || card.ticket_number::text) ILIKE '%' || $3 || '%'",
+    );
   });
 
   it('matches a regex search against the ticket key', async () => {
     const { query, values } = await captureSearchQuery('/^BLAPP-42$');
 
-    expect(values).to.deep.equal(['1', 'BLAPP-', '^BLAPP-42$']);
-    expect(query).to.include('($2::text || card.ticket_number::text) ~* $3');
+    expect(values).to.deep.equal(['1', '^BLAPP-42$']);
+    expect(query).to.include("(card.ticket_prefix || '-' || card.ticket_number::text) ~* $2");
   });
 });

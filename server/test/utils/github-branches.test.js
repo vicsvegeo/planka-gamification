@@ -46,6 +46,12 @@ describe('github-branches', () => {
       );
     });
 
+    it("uses the card's ticket prefix", () => {
+      expect(buildBranchName({ ticketPrefix: 'SHOP', ticketNumber: 3, name: 'Cart' })).to.equal(
+        'feat/SHOP-3-cart',
+      );
+    });
+
     it('drops the slug when the title has no usable characters', () => {
       expect(buildBranchName({ ticketNumber: 3, name: '🚀' })).to.equal('feat/BLAPP-3');
     });

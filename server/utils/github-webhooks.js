@@ -5,7 +5,7 @@
 
 const crypto = require('crypto');
 
-const { TICKET_KEY_PREFIX } = require('./ticket-keys');
+const { DEFAULT_TICKET_PREFIX } = require('./ticket-keys');
 const { buildCiValues } = require('./github-ci');
 
 const PrStates = {
@@ -14,8 +14,6 @@ const PrStates = {
   MERGED: 'merged',
   CLOSED: 'closed',
 };
-
-const TICKET_KEY_REGEX = new RegExp(`(?:^|[^A-Za-z0-9])${TICKET_KEY_PREFIX}-(\\d+)(?![0-9])`, 'gi');
 
 // GitHub signs the raw body: X-Hub-Signature-256: sha256=<hex HMAC-SHA256>.
 const verifySignature = (secret, rawBody, signatureHeader) => {
@@ -32,17 +30,28 @@ const verifySignature = (secret, rawBody, signatureHeader) => {
 };
 
 // Every ticket key in the branch name, so one branch (and its PR) can cover
-// several cards: BLAPP-219-BLAPP-220-shared-fix. Each key needs its prefix.
-const parseTicketNumbers = (branchName) => {
-  if (typeof branchName !== 'string') {
+// several cards: BLAPP-219-SHOP-3-shared-fix. Each key needs its prefix, and
+// only the given prefixes count (so "fix-2" in a branch name is not a key).
+// Prefixes are letters only, so they need no regex escaping.
+// Returns [{ ticketPrefix, ticketNumber }], prefixes uppercased.
+const parseTicketKeys = (branchName, ticketPrefixes = [DEFAULT_TICKET_PREFIX]) => {
+  if (typeof branchName !== 'string' || ticketPrefixes.length === 0) {
     return [];
   }
 
-  const ticketNumbers = Array.from(branchName.matchAll(TICKET_KEY_REGEX), (match) =>
-    parseInt(match[1], 10),
-  );
+  const regex = new RegExp(`(?:^|[^A-Za-z0-9])(${ticketPrefixes.join('|')})-(\\d+)(?![0-9])`, 'gi');
 
-  return [...new Set(ticketNumbers)];
+  const ticketKeys = new Map();
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const match of branchName.matchAll(regex)) {
+    const ticketPrefix = match[1].toUpperCase();
+    const ticketNumber = parseInt(match[2], 10);
+
+    ticketKeys.set(`${ticketPrefix}-${ticketNumber}`, { ticketPrefix, ticketNumber });
+  }
+
+  return [...ticketKeys.values()];
 };
 
 const getPrState = (pullRequest) => {
@@ -177,6 +186,6 @@ module.exports = {
   PrStates,
   BRANCH_WORK_RESET,
   verifySignature,
-  parseTicketNumbers,
+  parseTicketKeys,
   parseEvent,
 };

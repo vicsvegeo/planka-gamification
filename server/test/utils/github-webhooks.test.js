@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { expect } = require('chai');
 
-const { verifySignature, parseTicketNumbers, parseEvent } = require('../../utils/github-webhooks');
+const { verifySignature, parseTicketKeys, parseEvent } = require('../../utils/github-webhooks');
 
 const sign = (secret, body) =>
   `sha256=${crypto.createHmac('sha256', secret).update(body).digest('hex')}`;
@@ -42,27 +42,55 @@ describe('github-webhooks', () => {
     });
   });
 
-  describe('#parseTicketNumbers()', () => {
+  describe('#parseTicketKeys()', () => {
+    const key = (ticketPrefix, ticketNumber) => ({ ticketPrefix, ticketNumber });
+
     it('finds the key in generated and hand-made branch names', () => {
-      expect(parseTicketNumbers('feat/BLAPP-42-crash-on-empty-list')).to.deep.equal([42]);
-      expect(parseTicketNumbers('BLAPP-7')).to.deep.equal([7]);
-      expect(parseTicketNumbers('victor/blapp-12_quick-fix')).to.deep.equal([12]);
+      expect(parseTicketKeys('feat/BLAPP-42-crash-on-empty-list')).to.deep.equal([
+        key('BLAPP', 42),
+      ]);
+      expect(parseTicketKeys('BLAPP-7')).to.deep.equal([key('BLAPP', 7)]);
+      expect(parseTicketKeys('victor/blapp-12_quick-fix')).to.deep.equal([key('BLAPP', 12)]);
     });
 
     it('finds every key in a branch shared by several cards', () => {
-      expect(parseTicketNumbers('BLAPP-219-BLAPP-220-shared-fix')).to.deep.equal([219, 220]);
-      expect(parseTicketNumbers('feat/blapp-3_BLAPP-1/BLAPP-3')).to.deep.equal([3, 1]);
+      expect(parseTicketKeys('BLAPP-219-BLAPP-220-shared-fix')).to.deep.equal([
+        key('BLAPP', 219),
+        key('BLAPP', 220),
+      ]);
+      expect(parseTicketKeys('feat/blapp-3_BLAPP-1/BLAPP-3')).to.deep.equal([
+        key('BLAPP', 3),
+        key('BLAPP', 1),
+      ]);
+    });
+
+    it('finds keys of every given prefix, uppercased', () => {
+      expect(
+        parseTicketKeys('feat/BLAPP-219-shop-3-SHOPX-4-fix', ['BLAPP', 'SHOP', 'SHOPX']),
+      ).to.deep.equal([key('BLAPP', 219), key('SHOP', 3), key('SHOPX', 4)]);
+    });
+
+    it('keeps the same number under different prefixes apart', () => {
+      expect(parseTicketKeys('BLAPP-3-SHOP-3', ['BLAPP', 'SHOP'])).to.deep.equal([
+        key('BLAPP', 3),
+        key('SHOP', 3),
+      ]);
+    });
+
+    it('ignores unknown prefixes', () => {
+      expect(parseTicketKeys('feat/SHOP-3-fix-2-bugs')).to.deep.equal([]);
+      expect(parseTicketKeys('feat/SHOP-3', [])).to.deep.equal([]);
     });
 
     it('needs the prefix on each key', () => {
-      expect(parseTicketNumbers('BLAPP-219-220-fix-2-bugs')).to.deep.equal([219]);
+      expect(parseTicketKeys('BLAPP-219-220-fix-2-bugs')).to.deep.equal([key('BLAPP', 219)]);
     });
 
     it('ignores branches without a key or with a longer prefix', () => {
-      expect(parseTicketNumbers('main')).to.deep.equal([]);
-      expect(parseTicketNumbers('feat/XBLAPP-42')).to.deep.equal([]);
-      expect(parseTicketNumbers('feat/BLAPP-')).to.deep.equal([]);
-      expect(parseTicketNumbers(undefined)).to.deep.equal([]);
+      expect(parseTicketKeys('main')).to.deep.equal([]);
+      expect(parseTicketKeys('feat/XBLAPP-42')).to.deep.equal([]);
+      expect(parseTicketKeys('feat/BLAPP-')).to.deep.equal([]);
+      expect(parseTicketKeys(undefined)).to.deep.equal([]);
     });
   });
 

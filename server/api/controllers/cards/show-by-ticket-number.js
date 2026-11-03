@@ -5,21 +5,21 @@
 
 /**
  * @swagger
- * /cards/ticket/{ticketNumber}:
+ * /cards/ticket/{ticketKey}:
  *   get:
- *     summary: Get card details by ticket number
- *     description: Retrieves a card by its instance-wide ticket number. Returns the same payload as getCard.
+ *     summary: Get card details by ticket key
+ *     description: Retrieves a card by its ticket key (e.g. `BLAPP-42` or `SHOP-3`, case-insensitive). A bare number means a BLAPP key. Returns the same payload as getCard.
  *     tags:
  *       - Cards
  *     operationId: getCardByTicketNumber
  *     parameters:
- *       - name: ticketNumber
+ *       - name: ticketKey
  *         in: path
  *         required: true
- *         description: Ticket number of the card to retrieve
+ *         description: Ticket key (or BLAPP ticket number) of the card to retrieve
  *         schema:
- *           type: integer
- *           example: 42
+ *           type: string
+ *           example: BLAPP-42
  *     responses:
  *       200:
  *         description: Card details retrieved successfully (same shape as getCard)
@@ -44,6 +44,10 @@
  *         $ref: '#/components/responses/NotFound'
  */
 
+const { DEFAULT_TICKET_PREFIX } = require('../../../utils/ticket-keys');
+
+const TICKET_KEY_REGEX = /^(?:([A-Za-z]{2,10})-)?([1-9][0-9]{0,8})$/;
+
 const Errors = {
   CARD_NOT_FOUND: {
     cardNotFound: 'Card not found',
@@ -52,10 +56,9 @@ const Errors = {
 
 module.exports = {
   inputs: {
-    ticketNumber: {
-      type: 'number',
-      isInteger: true,
-      min: 1,
+    ticketKey: {
+      type: 'string',
+      regex: TICKET_KEY_REGEX,
       required: true,
     },
   },
@@ -69,7 +72,13 @@ module.exports = {
   async fn(inputs) {
     const { currentUser } = this.req;
 
-    const card = await Card.qm.getOneByTicketNumber(inputs.ticketNumber);
+    const [, ticketPrefix = DEFAULT_TICKET_PREFIX, ticketNumber] =
+      inputs.ticketKey.match(TICKET_KEY_REGEX);
+
+    const card = await Card.qm.getOneByTicketKey(
+      ticketPrefix.toUpperCase(),
+      parseInt(ticketNumber, 10),
+    );
 
     if (!card) {
       throw Errors.CARD_NOT_FOUND;

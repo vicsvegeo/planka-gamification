@@ -107,7 +107,7 @@ const StoryContent = React.memo(({ cardId }) => {
           </span>
         )}
         <div className={classNames(styles.name, card.isClosed && styles.nameClosed)}>
-          <TicketKey ticketNumber={card.ticketNumber} />
+          <TicketKey ticketPrefix={card.ticketPrefix} ticketNumber={card.ticketNumber} />
           {card.name}
         </div>
         {card.description && <div className={styles.descriptionText}>{descriptionText}</div>}

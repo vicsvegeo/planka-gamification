@@ -8,7 +8,7 @@
  * /cards/{id}/github-branch:
  *   post:
  *     summary: Create GitHub branch for card
- *     description: Creates a `<type>/BLAPP-<n>-<slug>` branch (type = the card's first type label, feat by default) from the tip of the project's base branch in the project's GitHub repository, or reuses it if it already exists, and stores its name on the card. Requires board editor permissions.
+ *     description: Creates a `<type>/<ticket key>-<slug>` branch (e.g. `feat/BLAPP-42-login`) (type = the card's first type label, feat by default) from the tip of the project's base branch in the project's GitHub repository, or reuses it if it already exists, and stores its name on the card. Requires board editor permissions.
  *     tags:
  *       - Cards
  *     operationId: createCardGithubBranch
@@ -135,6 +135,7 @@ module.exports = {
 
     const branch = buildBranchName({
       type: pickBranchType(labels),
+      ticketPrefix: card.ticketPrefix,
       ticketNumber: card.ticketNumber,
       name: card.name,
     });

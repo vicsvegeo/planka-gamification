@@ -310,7 +310,11 @@ const StoryContent = React.memo(() => {
               name={CardTypeIcons[CardTypes.STORY]}
               className={classNames(styles.moduleIcon, styles.moduleIconTitle)}
             />
-            <TicketKey ticketNumber={card.ticketNumber} className={styles.headerTicketKey} />
+            <TicketKey
+              ticketPrefix={card.ticketPrefix}
+              ticketNumber={card.ticketNumber}
+              className={styles.headerTicketKey}
+            />
             <div className={styles.headerTitleWrapper}>
               {canEditName ? (
                 <NameField defaultValue={card.name} size="large" onUpdate={handleNameUpdate} />

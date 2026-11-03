@@ -92,7 +92,7 @@ const InlineContent = React.memo(({ cardId }) => {
         className={classNames(styles.attachments, styles.name, card.isClosed && styles.nameClosed)}
       >
         <div className={styles.hidable}>
-          <TicketKey ticketNumber={card.ticketNumber} />
+          <TicketKey ticketPrefix={card.ticketPrefix} ticketNumber={card.ticketNumber} />
           {card.name}
         </div>
       </span>

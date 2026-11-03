@@ -7,7 +7,7 @@ import buildSearchParts from './build-search-parts';
 import { formatTicketKey } from './ticket-key';
 
 // Returns a predicate for the board search: a card matches on its name,
-// description or ticket key (BLAPP-<n>). A leading "/" makes it a regex.
+// description or ticket key (<prefix>-<n>). A leading "/" makes it a regex.
 export default (search) => {
   if (search.startsWith('/')) {
     let searchRegex;
@@ -18,7 +18,7 @@ export default (search) => {
     }
 
     return (card) => {
-      const ticketKey = formatTicketKey(card.ticketNumber);
+      const ticketKey = formatTicketKey(card.ticketPrefix, card.ticketNumber);
 
       return (
         searchRegex.test(card.name) ||
@@ -33,7 +33,7 @@ export default (search) => {
   return (card) => {
     const name = card.name.toLowerCase();
     const description = card.description && card.description.toLowerCase();
-    const ticketKey = formatTicketKey(card.ticketNumber);
+    const ticketKey = formatTicketKey(card.ticketPrefix, card.ticketNumber);
     const lowerTicketKey = ticketKey && ticketKey.toLowerCase();
 
     return searchParts.every(

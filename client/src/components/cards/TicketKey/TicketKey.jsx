@@ -11,8 +11,8 @@ import { formatTicketKey } from '../../../utils/ticket-key';
 
 import styles from './TicketKey.module.scss';
 
-const TicketKey = React.memo(({ ticketNumber, className }) => {
-  const ticketKey = formatTicketKey(ticketNumber);
+const TicketKey = React.memo(({ ticketPrefix, ticketNumber, className }) => {
+  const ticketKey = formatTicketKey(ticketPrefix, ticketNumber);
 
   if (!ticketKey) {
     return null;
@@ -22,11 +22,13 @@ const TicketKey = React.memo(({ ticketNumber, className }) => {
 });
 
 TicketKey.propTypes = {
+  ticketPrefix: PropTypes.string,
   ticketNumber: PropTypes.number,
   className: PropTypes.string,
 };
 
 TicketKey.defaultProps = {
+  ticketPrefix: undefined,
   ticketNumber: undefined,
   className: undefined,
 };

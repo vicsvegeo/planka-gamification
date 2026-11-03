@@ -11,8 +11,10 @@ const initialState = {
     name: '',
     description: '',
     type: ProjectTypes.PRIVATE,
+    ticketPrefix: '',
   },
   isSubmitting: false,
+  error: null,
 };
 
 // eslint-disable-next-line default-param-last
@@ -26,6 +28,7 @@ export default (state = initialState, { type, payload }) => {
           ...payload.data,
         },
         isSubmitting: true,
+        error: null,
       };
     case ActionTypes.PROJECT_CREATE__SUCCESS:
       return initialState;
@@ -33,6 +36,7 @@ export default (state = initialState, { type, payload }) => {
       return {
         ...state,
         isSubmitting: false,
+        error: payload.error,
       };
     default:
       return state;

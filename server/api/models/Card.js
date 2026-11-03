@@ -73,9 +73,13 @@
  *           nullable: true
  *           description: Position of the card within the list
  *           example: 65536
+ *         ticketPrefix:
+ *           type: string
+ *           description: Prefix of the ticket key, from the project the card was created in (BLAPP unless that project has its own)
+ *           example: BLAPP
  *         ticketNumber:
  *           type: integer
- *           description: Instance-wide sequential number shown as the ticket key (e.g. BLAPP-42)
+ *           description: Sequential number within the ticket prefix, shown as the ticket key (e.g. BLAPP-42)
  *           example: 42
  *         name:
  *           type: string
@@ -255,6 +259,11 @@ module.exports = {
       columnName: 'list_changed_at',
     },
     // Assigned by a database trigger on insert, never set by the app.
+    ticketPrefix: {
+      type: 'string',
+      allowNull: true,
+      columnName: 'ticket_prefix',
+    },
     ticketNumber: {
       type: 'number',
       allowNull: true,

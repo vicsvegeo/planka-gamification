@@ -327,7 +327,11 @@ const ProjectContent = React.memo(() => {
         <Grid.Column width={16} className={styles.headerPadding}>
           <div className={styles.headerWrapper}>
             <Icon name={CardTypeIcons[CardTypes.PROJECT]} className={styles.moduleIcon} />
-            <TicketKey ticketNumber={card.ticketNumber} className={styles.headerTicketKey} />
+            <TicketKey
+              ticketPrefix={card.ticketPrefix}
+              ticketNumber={card.ticketNumber}
+              className={styles.headerTicketKey}
+            />
             <div className={styles.headerTitleWrapper}>
               {canEditName ? (
                 <NameField defaultValue={card.name} onUpdate={handleNameUpdate} />

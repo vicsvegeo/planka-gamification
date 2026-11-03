@@ -4,7 +4,6 @@
  */
 
 const buildSearchParts = require('../../../../utils/build-query-parts');
-const { TICKET_KEY_PREFIX } = require('../../../../utils/ticket-keys');
 const { makeRowToModelTransformer } = require('../helpers');
 
 const LIMIT = 50;
@@ -48,10 +47,18 @@ const getIncompleteWithDueDate = async () => {
   return queryResult.rows.map((row) => transformRowToModel(row));
 };
 
-const getOneByTicketNumber = (ticketNumber) =>
+const getOneByTicketKey = (ticketPrefix, ticketNumber) =>
   Card.findOne({
+    ticketPrefix,
     ticketNumber,
   });
+
+// Every prefix a card has ever been numbered with (each has a counter row).
+const getTicketPrefixes = async () => {
+  const queryResult = await sails.sendNativeQuery('SELECT prefix FROM ticket_counter');
+
+  return queryResult.rows.map(({ prefix }) => prefix);
+};
 
 const getByListId = async (listId, { exceptIdOrIds, sort = ['position', 'id'] } = {}) => {
   const criteria = {
@@ -107,8 +114,7 @@ const getByEndlessListId = async (
     }
 
     if (search) {
-      queryValues.push(`${TICKET_KEY_PREFIX}-`);
-      const ticketKey = `($${queryValues.length}::text || card.ticket_number::text)`;
+      const ticketKey = "(card.ticket_prefix || '-' || card.ticket_number::text)";
 
       if (search.startsWith('/')) {
         queryValues.push(search.substring(1));
@@ -116,7 +122,7 @@ const getByEndlessListId = async (
       } else {
         const searchParts = buildSearchParts(search);
 
-        // Every part must match the name, description or ticket key (BLAPP-<n>)
+        // Every part must match the name, description or ticket key (<prefix>-<n>)
         searchParts.forEach((searchPart) => {
           queryValues.push(searchPart);
           const ilikeValue = `'%' || $${queryValues.length} || '%'`;
@@ -290,7 +296,8 @@ module.exports = {
   getByIds,
   getByBoardId,
   getByBoardIds,
-  getOneByTicketNumber,
+  getOneByTicketKey,
+  getTicketPrefixes,
   getIncompleteWithDueDate,
   getByListId,
   getByEndlessListId,

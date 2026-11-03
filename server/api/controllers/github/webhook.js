@@ -8,7 +8,7 @@
  * /github/webhook:
  *   post:
  *     summary: Receive GitHub webhook
- *     description: Receives `create`, `delete`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the cards from the `BLAPP-<n>` keys in the branch name (a branch can name several, e.g. `BLAPP-219-BLAPP-220-fix`), updates their PR state / CI badges and, when a PR is opened or reopened, syncs their Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
+ *     description: Receives `create`, `delete`, `pull_request` and `workflow_run` deliveries from a GitHub repository webhook, finds the cards from the `<prefix>-<n>` ticket keys in the branch name (BLAPP or a project's own prefix; a branch can name several, e.g. `BLAPP-219-BLAPP-220-fix`), updates their PR state / CI badges and, when a PR is opened or reopened, syncs their Why / Done when into the PR description. Authenticated by the `X-Hub-Signature-256` HMAC signature (GITHUB_WEBHOOK_SECRET), not by a token. Cards are never moved between lists.
  *     tags:
  *       - GitHub
  *     operationId: receiveGithubWebhook
@@ -22,11 +22,7 @@
  *         $ref: '#/components/responses/NotFound'
  */
 
-const {
-  verifySignature,
-  parseTicketNumbers,
-  parseEvent,
-} = require('../../../utils/github-webhooks');
+const { verifySignature, parseTicketKeys, parseEvent } = require('../../../utils/github-webhooks');
 const { GithubError } = require('../../../utils/github-api');
 const { getGithubApp } = require('../../../utils/github-app');
 const { buildBlock, mergeIntoBody } = require('../../../utils/card-context');
@@ -54,7 +50,7 @@ const syncPullRequestDescription = async (cards, repo, pullRequest) => {
 
   const block = buildBlock(
     cards.map((card) => ({
-      ticketKey: formatTicketKey(card.ticketNumber),
+      ticketKey: formatTicketKey(card.ticketPrefix, card.ticketNumber),
       cardName: card.name,
       cardUrl: `${baseUrl.replace(/\/+$/, '')}/cards/${card.id}`,
       description: card.description,
@@ -86,15 +82,16 @@ const syncPullRequestDescription = async (cards, repo, pullRequest) => {
   return `synced card context into PR #${pullRequest.number}`;
 };
 
-// Applies the event to the card with this ticket number. Returns the card when
-// it belongs to the event's repo (so its context goes into the PR description),
-// and a message for the delivery result.
-const updateCard = async (ticketNumber, event) => {
-  const card = await Card.qm.getOneByTicketNumber(ticketNumber);
+// Applies the event to the card with this ticket key. Returns the card when it
+// belongs to the event's repo (so its context goes into the PR description), and
+// a message for the delivery result.
+const updateCard = async ({ ticketPrefix, ticketNumber }, event) => {
+  const ticketKey = formatTicketKey(ticketPrefix, ticketNumber);
+  const card = await Card.qm.getOneByTicketKey(ticketPrefix, ticketNumber);
 
   if (!card) {
     return {
-      message: `ignored: no card for ticket ${ticketNumber}`,
+      message: `ignored: no card for ticket ${ticketKey}`,
     };
   }
 
@@ -107,7 +104,7 @@ const updateCard = async (ticketNumber, event) => {
     project.githubRepo.toLowerCase() !== (event.repo || '').toLowerCase()
   ) {
     return {
-      message: `ignored: card ${ticketNumber} project is linked to ${project.githubRepo}, not ${event.repo}`,
+      message: `ignored: card ${ticketKey} project is linked to ${project.githubRepo}, not ${event.repo}`,
     };
   }
 
@@ -208,9 +205,9 @@ module.exports = {
       };
     }
 
-    const ticketNumbers = parseTicketNumbers(event.branch);
+    const ticketKeys = parseTicketKeys(event.branch, await Card.qm.getTicketPrefixes());
 
-    if (ticketNumbers.length === 0) {
+    if (ticketKeys.length === 0) {
       return {
         result: `ignored: no ticket key in branch ${event.branch}`,
       };
@@ -220,9 +217,9 @@ module.exports = {
     const syncedCards = [];
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const ticketNumber of ticketNumbers) {
+    for (const ticketKey of ticketKeys) {
       // eslint-disable-next-line no-await-in-loop
-      const result = await updateCard(ticketNumber, event);
+      const result = await updateCard(ticketKey, event);
 
       if (result.card) {
         syncedCards.push(result.card);

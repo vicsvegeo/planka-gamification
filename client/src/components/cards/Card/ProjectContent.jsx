@@ -154,7 +154,7 @@ const ProjectContent = React.memo(({ cardId }) => {
   return (
     <div className={styles.wrapper}>
       <div className={classNames(styles.name, card.isClosed && styles.nameClosed)}>
-        <TicketKey ticketNumber={card.ticketNumber} />
+        <TicketKey ticketPrefix={card.ticketPrefix} ticketNumber={card.ticketNumber} />
         {card.name}
       </div>
       {coverUrl && (
