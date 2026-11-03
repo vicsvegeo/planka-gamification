@@ -11,8 +11,60 @@ const {
   computeOverdueXp,
 } = require('../../../utils/gamification');
 
+const awardToUser = async (userId, { xpGained, onTime, listCleared }) => {
+  const userStatsBefore = await UserStats.qm.getOrCreateOneByUserId(userId);
+  const nextXp = userStatsBefore.xp + xpGained;
+  const { level: nextLevel } = levelForXp(nextXp);
+  const leveledUp = nextLevel > userStatsBefore.level;
+
+  const userStats = await UserStats.qm.updateOne(userStatsBefore.id, {
+    xp: nextXp,
+    level: nextLevel,
+    totalCompletions: userStatsBefore.totalCompletions + 1,
+    onTimeCompletions: userStatsBefore.onTimeCompletions + (onTime ? 1 : 0),
+  });
+
+  const statsPayload = _.pick(userStats, ['xp', 'level', 'totalCompletions', 'onTimeCompletions']);
+
+  const newlyUnlockedBadges = await sails.helpers.gamification.checkBadges.with({
+    userId,
+    context: {
+      userStats: statsPayload,
+      listCleared,
+    },
+  });
+
+  sails.sockets.broadcast(`user:${userId}`, 'gamificationEvent', {
+    item: {
+      kind: 'statsUpdate',
+      xpGained,
+      onTime,
+      stats: statsPayload,
+    },
+  });
+
+  if (leveledUp) {
+    sails.sockets.broadcast(`user:${userId}`, 'gamificationEvent', {
+      item: {
+        kind: 'levelUp',
+        level: nextLevel,
+      },
+    });
+  }
+
+  newlyUnlockedBadges.forEach((badge) => {
+    sails.sockets.broadcast(`user:${userId}`, 'gamificationEvent', {
+      item: {
+        kind: 'badgeUnlocked',
+        badge: _.pick(badge, ['slug', 'name', 'description', 'icon']),
+      },
+    });
+  });
+};
+
 // Fires once, exactly at the moment a card transitions into a closed list. Awards XP
-// (plus a one-time on-time bonus), recomputes the completer's level, runs the badge
+// (plus a one-time on-time bonus) to the card's members (or the mover if unassigned),
+// recomputes each recipient's level, runs the badge
 // engine, and broadcasts lightweight socket events for the client to toast off of.
 module.exports = {
   inputs: {
@@ -60,57 +112,25 @@ module.exports = {
       bonusAwarded: cardGamification.bonusAwarded || onTime,
     });
 
-    const userStatsBefore = await UserStats.qm.getOrCreateOneByUserId(actorUser.id);
-    const nextXp = userStatsBefore.xp + xpGained;
-    const { level: nextLevel } = levelForXp(nextXp);
-    const leveledUp = nextLevel > userStatsBefore.level;
-
-    const userStats = await UserStats.qm.updateOne(userStatsBefore.id, {
-      xp: nextXp,
-      level: nextLevel,
-      totalCompletions: userStatsBefore.totalCompletions + 1,
-      onTimeCompletions: userStatsBefore.onTimeCompletions + (onTime ? 1 : 0),
-    });
-
     // "Clean Sweep": this move emptied out the list the card left, e.g. clearing a To Do list.
     const remainingInPreviousList =
       previousList.id === card.listId ? [] : await Card.qm.getByListId(previousList.id);
 
     const listCleared = previousList.id !== card.listId && remainingInPreviousList.length === 0;
 
-    const newlyUnlockedBadges = await sails.helpers.gamification.checkBadges.with({
-      userId: actorUser.id,
-      context: {
-        userStats: _.pick(userStats, ['xp', 'level', 'totalCompletions', 'onTimeCompletions']),
-        listCleared,
-      },
-    });
+    // Credit goes to the card's assigned members; if nobody is assigned, the user who moved
+    // the card gets it. Each member receives the full XP.
+    const cardMemberships = await CardMembership.qm.getByCardId(card.id);
 
-    sails.sockets.broadcast(`user:${actorUser.id}`, 'gamificationEvent', {
-      item: {
-        kind: 'statsUpdate',
-        xpGained,
-        onTime,
-        stats: _.pick(userStats, ['xp', 'level', 'totalCompletions', 'onTimeCompletions']),
-      },
-    });
+    const recipientUserIds =
+      cardMemberships.length > 0
+        ? _.uniq(cardMemberships.map((cardMembership) => cardMembership.userId))
+        : [actorUser.id];
 
-    if (leveledUp) {
-      sails.sockets.broadcast(`user:${actorUser.id}`, 'gamificationEvent', {
-        item: {
-          kind: 'levelUp',
-          level: nextLevel,
-        },
-      });
+    // eslint-disable-next-line no-restricted-syntax
+    for (const userId of recipientUserIds) {
+      // eslint-disable-next-line no-await-in-loop
+      await awardToUser(userId, { xpGained, onTime, listCleared });
     }
-
-    newlyUnlockedBadges.forEach((badge) => {
-      sails.sockets.broadcast(`user:${actorUser.id}`, 'gamificationEvent', {
-        item: {
-          kind: 'badgeUnlocked',
-          badge: _.pick(badge, ['slug', 'name', 'description', 'icon']),
-        },
-      });
-    });
   },
 };
